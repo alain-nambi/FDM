@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Frais de Mission</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary-color: #4558c9;
+      --secondary-color: #e9ecef;
+      --text-color: #333;
+      --bg-light: #f8f9fa;
+      --border-radius: 8px;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      color: var(--text-color);
+    }
+    
+    
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+    
+    .main-content-expanded {
+      margin-left: 60px;
+    }
+    
+    .card {
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      border: none;
+    }
+    
+    .card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      font-weight: bold;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .table th {
+      font-weight: 600;
+      border-top: none;
+    }
+    
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    
+    .badge-validated {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .badge-refused {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .badge-closed {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .badge-billed {
+      background-color: #198754;
+      color: white;
+    }
+    
+    .badge-not-billed {
+      background-color: #fd7e14;
+      color: white;
+    }
+    
+    .action-icons {
+      cursor: pointer;
+      margin: 0 5px;
+      padding: 5px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      position: relative;
+      z-index: 100;
+    }
+    
+    .action-icons .validate {
+      color: #28a745;
+    }
+    
+    .action-icons .refuse {
+      color: #dc3545;
+    }
+    
+    .action-icons .details {
+      color: var(--primary-color);
+    }
+    
+    .action-icons i:hover {
+      transform: scale(1.2);
+      background-color: rgba(0,0,0,0.05);
+    }
+    
+    .pagination {
+      justify-content: center;
+    }
+    
+    .pagination .page-item .page-link {
+      color: var(--primary-color);
+    }
+    
+    .pagination .page-item.active .page-link {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+    
+    .form-control, .form-select {
+      border-radius: var(--border-radius);
+      padding: 10px 15px;
+    }
+    
+    /* Animation */
+    .fade-in {
+      animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .nav-tabs .nav-link {
+      color: var(--text-color);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 0;
+      position: relative;
+    }
+    
+    .nav-tabs .nav-link.active {
+      color: var(--primary-color);
+      background-color: transparent;
+      font-weight: bold;
+    }
+    
+    .nav-tabs .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-color);
+    }
+    
+    .cloud-account-card {
+      border: 1px solid #e0e0e0;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+    }
+    
+    .cloud-account-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 15px;
+      border-top-left-radius: var(--border-radius);
+      border-top-right-radius: var(--border-radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .env-table {
+      margin: 0;
+    }
+    
+    .env-table td, .env-table th {
+      padding: 12px 15px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .env-table th {
+      background-color: #f8f9fa;
+      font-weight: 500;
+      color: #666;
+    }
+    
+    .badge-cloud {
+      background-color: rgba(69, 88, 201, 0.1);
+      color: var(--primary-color);
+      border: 1px solid rgba(69, 88, 201, 0.2);
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      border-radius: var(--border-radius);
+    }
+    
+    .detail-modal .modal-header {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .detail-sections {
+      padding: 15px;
+    }
+    
+    .detail-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      background-color: #f8f9fa;
+    }
+    
+    .detail-section h5 {
+      margin-bottom: 15px;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+    
+    /* Override bootstrap modal animation */
+    .modal.fade .modal-dialog {
+      transition: transform .3s ease-out;
+      transform: scale(0.8);
+    }
+    
+    .modal.show .modal-dialog {
+      transform: scale(1);
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-sidebar-toggle {
+        display: block;
+      }
+      
+      .main-content {
+        margin-left: 0;
+        padding-top: 50px;
+      }
+      
+      .main-content-expanded {
+        margin-left: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  {% extends 'base.html' %}
+  
+
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Account Settings Header -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">My Account Settings</h5>
+        <div class="row mt-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <i class="fas fa-user-circle mb-2 fa-2x"></i>
+                <p class="mb-0 small">eugene@minagroup.com</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <i class="fas fa-key mb-2 fa-2x"></i>
+                <p class="mb-0 small">ACCESS CONTROL</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body text-center">
+                <i class="fas fa-code-branch mb-2 fa-2x"></i>
+                <p class="mb-0 small">CODE REPOSITORIES</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body text-center">
+                <i class="fas fa-credit-card mb-2 fa-2x"></i>
+                <p class="mb-0 small">PAYMENTS</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a class="nav-link" href="#">Account Information</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" href="#">Cloud Accounts</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Code Repositories</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Continuous Delivery</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Plans & Payments</a>
+      </li>
+    </ul>
+
+    <!-- Cloud Account Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Gestion des Frais de Mission</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMissionModal">
+          <i class="fas fa-plus"></i> Ajouter une demande
+        </button>
+      </div>
+      <div class="card-body fade-in">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID Mission</th>
+                <th>Lieu</th>
+                <th>Technicien</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Facturation</th>
+                <th>Total à payer</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MISS-001</td>
+                <td>Antananarivo</td>
+                <td>Jean Dupont</td>
+                <td>01/03/2025 08:00</td>
+                <td>03/03/2025 17:00</td>
+                <td><span class="badge badge-billed">Facturé</span></td>
+                <td>250 000 Ar</td>
+                <td><span class="badge badge-validated">Validé</span></td>
+                <td class="action-icons">
+                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
+                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                </td>
+              </tr>
+              <tr>
+                <td>MISS-002</td>
+                <td>Toamasina</td>
+                <td>Marie Rakoto</td>
+                <td>05/03/2025 09:00</td>
+                <td>10/03/2025 18:00</td>
+                <td><span class="badge badge-not-billed">Non facturé</span></td>
+                <td>480 000 Ar</td>
+                <td><span class="badge badge-refused">Refusé</span></td>
+                <td class="action-icons">
+                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
+                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                </td>
+              </tr>
+              <tr>
+                <td>MISS-003</td>
+                <td>Mahajanga</td>
+                <td>Pierre Andria</td>
+                <td>12/03/2025 07:30</td>
+                <td>15/03/2025 16:00</td>
+                <td><span class="badge badge-not-billed">Non facturé</span></td>
+                <td>350 000 Ar</td>
+                <td><span class="badge badge-closed">Clôturé</span></td>
+                <td class="action-icons">
+                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
+                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                </td>
+              </tr>
+              <tr>
+                <td>MISS-004</td>
+                <td>Fianarantsoa</td>
+                <td>Sophie Rabe</td>
+                <td>20/03/2025 08:00</td>
+                <td>22/03/2025 17:30</td>
+                <td><span class="badge badge-billed">Facturé</span></td>
+                <td>280 000 Ar</td>
+                <td><span class="badge badge-validated">Validé</span></td>
+                <td class="action-icons">
+                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
+                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                </td>
+              </tr>
+              <tr>
+                <td>MISS-005</td>
+                <td>Toliara</td>
+                <td>Luc Rajao</td>
+                <td>25/03/2025 09:00</td>
+                <td>30/03/2025 16:00</td>
+                <td><span class="badge badge-not-billed">Non facturé</span></td>
+                <td>520 000 Ar</td>
+                <td><span class="badge badge-validated">Validé</span></td>
+                <td class="action-icons">
+                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
+                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+          <ul class="pagination">
+            <li class="page-item">
+              <a class="page-link" href="#" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+              <a class="page-link" href="#" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- History Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Historique des demandes</h5>
+      </div>
+      <div class="card-body fade-in">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID Mission</th>
+                <th>Lieu</th>
+                <th>Technicien</th>
+                <th>Dates</th>
+                <th>Total payé</th>
+                <th>Statut final</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MISS-H001</td>
+                <td>Antsiranana</td>
+                <td>Jean Dupont</td>
+                <td>10/02/2025 - 15/02/2025</td>
+                <td>450 000 Ar</td>
+                <td><span class="badge badge-closed">Clôturé</span></td>
+              </tr>
+              <tr>
+                <td>MISS-H002</td>
+                <td>Ambositra</td>
+                <td>Marie Rakoto</td>
+                <td>01/02/2025 - 03/02/2025</td>
+                <td>180 000 Ar</td>
+                <td><span class="badge badge-closed">Clôturé</span></td>
+              </tr>
+              <tr>
+                <td>MISS-H003</td>
+                <td>Antsirabe</td>
+                <td>Pierre Andria</td>
+                <td>20/01/2025 - 25/01/2025</td>
+                <td>320 000 Ar</td>
+                <td><span class="badge badge-closed">Clôturé</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Mission Modal -->
+  <div class="modal fade" id="addMissionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Ajouter une demande de frais de mission</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Lieu de la mission</label>
+                <input type="text" class="form-control" placeholder="Ex: Antananarivo">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Technicien</label>
+                <select class="form-select">
+                  <option selected>Choisir un technicien</option>
+                  <option>Jean Dupont</option>
+                  <option>Marie Rakoto</option>
+                  <option>Pierre Andria</option>
+                  <option>Sophie Rabe</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Détails de la mission</label>
+              <textarea class="form-control" rows="3" placeholder="Décrivez les détails de la mission"></textarea>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Date de début</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Heure de début</label>
+                <input type="time" class="form-control">
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Date de fin</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Heure de fin</label>
+                <input type="time" class="form-control">
+              </div>
+            </div>
+            
+            <h6 class="mt-4 mb-3">Hébergement</h6>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="form-label">Nombre de jours</label>
+                <input type="number" class="form-control" min="0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Tarif nuitée (Ar)</label>
+                <input type="number" class="form-control" min="0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Total hébergement</label>
+                <input type="text" class="form-control" readonly>
+              </div>
+            </div>
+            
+            <h6 class="mt-4 mb-3">Repas</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Budget repas/jour (Ar)</label>
+                <input type="number" class="form-control" min="0">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Total repas</label>
+                <input type="text" class="form-control" readonly>
+              </div>
+            </div>
+            
+            <h6 class="mt-4 mb-3">Transport</h6>
+            <div class="mb-3">
+              <label class="form-label">Moyen de transport</label>
+              <select class="form-select">
+                <option selected>Choisir un moyen de transport</option>
+                <option>Taxi-brousse</option>
+                <option>Véhicule de société</option>
+                <option>Avion</option>
+                <option>Bateau</option>
+                <option>À pieds</option>
+                <option>Transport matériels</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Coût du transport (Ar)</label>
+              <input type="number" class="form-control" min="0">
+            </div>
+            
+            <h6 class="mt-4 mb-3">Divers frais</h6>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <input type="text" class="form-control" placeholder="Description des frais divers">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Montant (Ar)</label>
+              <input type="number" class="form-control" min="0">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary">Soumettre la demande</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal fade detail-modal" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Détails de la mission - MISS-001</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6>Technicien</h6>
+              <p>Jean Dupont</p>
+              
+              <h6>Lieu de la mission</h6>
+              <p>Antananarivo</p>
+              
+              <h6>Dates</h6>
+              <p>01/03/2025 08:00 - 03/03/2025 17:00</p>
+            </div>
+            <div class="col-md-6">
+              <h6>Statut</h6>
+              <p><span class="badge badge-validated">Validé</span></p>
+              
+              <h6>Facturation</h6>
+              <p><span class="badge badge-billed">Facturé</span></p>
+              
+              <h6>Total à payer</h6>
+              <p class="fw-bold">250 000 Ar</p>
+            </div>
+          </div>
+          
+          <h5 class="mb-3">Détails des frais</h5>
+          
+          <div class="detail-sections">
+            <div class="detail-section">
+              <h5>Hébergement</h5>
+              <div class="row">
+                <div class="col-md-4">
+                  <p class="mb-1">Nombre de jours</p>
+                  <h6>2 jours</h6>
+                </div>
+                <div class="col-md-4">
+                  <p class="mb-1">Tarif nuitée</p>
+                  <h6>50 000 Ar</h6>
+                </div>
+                <div class="col-md-4">
+                  <p class="mb-1">Total hébergement</p>
+                  <h6>100 000 Ar</h6>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-section">
+              <h5>Repas</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1">Budget repas/jour</p>
+                  <h6>20 000 Ar</h6>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1">Total repas (3 jours)</p>
+                  <h6>60 000 Ar</h6>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-section">
+              <h5>Transport</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1">Moyen de transport</p>
+                  <h6>Véhicule de société</h6>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1">Coût du transport</p>
+                  <h6>70 000 Ar</h6>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-section">
+              <h5>Frais divers</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1">Description</p>
+                  <h6>Achat de matériel d'urgence</h6>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1">Montant</p>
+                  <h6>20 000 Ar</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h5 class="mt-4 mb-3">Historique des actions</h5>
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-muted small">28/02/2025 14:32</span>
+                <p class="mb-0">Demande créée par Jean Dupont</p>
+              </div>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-muted small">01/03/2025 09:15</span>
+                <p class="mb-0">Demande validée par Rakotondrabe Eric</p>
+              </div>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-muted small">05/03/2025 11:30</span>
+                <p class="mb-0">Facture établie par Service Comptabilité</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          <button type="button" class="btn btn-primary">Télécharger PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validation Modal -->
+  <div class="modal fade" id="validateModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Valider la demande</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir valider cette demande de frais de mission ?</p>
+          <div class="mb-3">
+            <label class="form-label">Commentaire (optionnel)</label>
+            <textarea class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-success">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refuse Modal -->
+  <div class="modal fade" id="refuseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Refuser la demande</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir refuser cette demande de frais de mission ?</p>
+          <div class="mb-3">
+            <label class="form-label">Motif du refus <span class="text-danger">*</span></label>
+            <textarea class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger">Refuser</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.querySelector('.main-content');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+      
+    });
+
+
+  </script>
+</body>
+</html>
