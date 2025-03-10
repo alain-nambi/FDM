@@ -3,11 +3,7 @@ from django.db import models
 # Create your models here.
 
 class Technician(models.Model):
-    technician_id = models.CharField(
-        max_length=50,
-        primary_key=True,
-        help_text='id du technicien'
-    )
+   
     first_name = models.CharField(
         max_length=50,
         help_text='nom du technicien'
@@ -17,14 +13,16 @@ class Technician(models.Model):
         help_text='prenom du technicien'
     )
     
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+    
     
 
 class Mission(models.Model):
-    mission_id = models.CharField(
-        max_length=15,
-        primary_key=True,
-        help_text='id de la mission'
-    )
+    
+    
+    techniciens = models.ManyToManyField(Technician, related_name="missions")
+   
     
     mission_details = models.TextField(
         help_text='details de la mission',
@@ -47,11 +45,7 @@ class Mission(models.Model):
         help_text='heure de fin de la mission',
         verbose_name='End Hour'
     )
-    technician = models.ForeignKey(
-        Technician,
-        on_delete=models.CASCADE,
-        help_text='technicien de la mission'
-    )
+    
     location = models.CharField(
         max_length=50,
         help_text='lieu de la mission'
@@ -63,9 +57,13 @@ class Mission(models.Model):
     )
     
     
-    
+   
     
 class Expense(models.Model):
+    
+    
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE, related_name="depenses")
+    
     hosting = models.CharField(
         max_length=100,
         help_text='hebergement'
@@ -85,8 +83,13 @@ class Expense(models.Model):
         max_length=100,
         help_text='divers frais'
     )
- 
+    def __str__(self):
+        return f"{self.hosting}Ar, {self.meal}, {self.transport}, {self.various_expenses}Ar"
+        
+   
     
+    
+
 
     
     
