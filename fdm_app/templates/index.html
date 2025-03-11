@@ -1,4 +1,4 @@
- 
+
  {% extends 'base.html' %}
  
  {% block title %}Gestion des Frais de Mission {% endblock %}
@@ -19,7 +19,6 @@
       background-color: #f0f2f5;
       color: var(--text-color);
     }
-    
     
     .main-content {
       margin-left: 250px;
@@ -252,45 +251,7 @@
   <!-- Main Content -->
   <div class="main-content">
     <!-- En-tête de la page  -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">My Account Settings</h5>
-        <div class="row mt-4">
-          <div class="col-md-3">
-            <div class="card bg-primary text-white">
-              <div class="card-body text-center">
-                <i class="fas fa-user-circle mb-2 fa-2x"></i>
-                <p class="mb-0 small">eugene@minagroup.com</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-info text-white">
-              <div class="card-body text-center">
-                <i class="fas fa-key mb-2 fa-2x"></i>
-                <p class="mb-0 small">ACCESS CONTROL</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-success text-white">
-              <div class="card-body text-center">
-                <i class="fas fa-code-branch mb-2 fa-2x"></i>
-                <p class="mb-0 small">CODE REPOSITORIES</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-warning text-white">
-              <div class="card-body text-center">
-                <i class="fas fa-credit-card mb-2 fa-2x"></i>
-                <p class="mb-0 small">PAYMENTS</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% include 'account.html' %}
 
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-4">
@@ -337,7 +298,7 @@
             </thead>
             <tbody>
 
-              <!-- entrance des données sur la mission -->
+              <!-- Vue du tableau des données sur la mission -->
               {% for mission in missions %}
               <tr>
                 <td> {{ mission.id }} </td>
@@ -349,15 +310,26 @@
                     Aucun technicien
                   {% endfor %}
                 </td>
-                <td>{{ mission.start_date }} {{ mission.start_hour }}</td>
-                <td>{{ mission.end_date }} {{ mission.end_hour }}</td>
-                <td><span class="badge badge-billed">Facturé</span></td>
-                <td> 25000 </td>
+                <td>{{ mission.start_date|date:"d F Y" }} à {{ mission.start_hour|time:"H:i" }} </td>
+                <td>{{ mission.end_date|date:"d F Y" }} à {{ mission.end_hour|time:"H:i" }}</td>
+
+                {% if mission.facturation %}
+                <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
+                {% else %}
+                <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
+                {% endif %}
+
+                {% for expense in mission.depenses.all %}
+                <td> {{ expense.total_expenses }} Ar </td>
+                {% endfor %}
+                
                 <td><span class="badge badge-validated">Validé</span></td>
+
+                <!-- Icon de valider , details et refuser -->
                 <td class="action-icons">
                   <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
                   <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
-                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal"></i>
+                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal{{ mission.id }}"></i>
                 </td>
               </tr>
               {% endfor %}
@@ -366,12 +338,6 @@
           </table>
         </div>
         
-
-
-
-
-
-
 
         <!-- Pagination -->
         <nav aria-label="Page navigation">
@@ -394,57 +360,7 @@
       </div>
     </div>
     
-    <!-- History Section -->
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Historique des demandes</h5>
-      </div>
-      <div class="card-body fade-in">
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>ID Mission</th>
-                <th>Lieu</th>
-                <th>Technicien</th>
-                <th>Dates</th>
-                <th>Total payé</th>
-                <th>Statut final</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>MISS-H001</td>
-                <td>Antsiranana</td>
-                <td>Jean Dupont</td>
-                <td>10/02/2025 - 15/02/2025</td>
-                <td>450 000 Ar</td>
-                <td><span class="badge badge-closed">Clôturé</span></td>
-              </tr>
-              <tr>
-                <td>MISS-H002</td>
-                <td>Ambositra</td>
-                <td>Marie Rakoto</td>
-                <td>01/02/2025 - 03/02/2025</td>
-                <td>180 000 Ar</td>
-                <td><span class="badge badge-closed">Clôturé</span></td>
-              </tr>
-              <tr>
-                <td>MISS-H003</td>
-                <td>Antsirabe</td>
-                <td>Pierre Andria</td>
-                <td>20/01/2025 - 25/01/2025</td>
-                <td>320 000 Ar</td>
-                <td><span class="badge badge-closed">Clôturé</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Mission Modal -->
+  <!-- Ajouter les demandes de frais de mission -->
   <div class="modal fade" id="addMissionModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -453,7 +369,8 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form>
+          <form method="POST" action="{% url 'index.html' %}">
+            {% csrf_token %}
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Lieu de la mission</label>
@@ -461,12 +378,12 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label">Technicien</label>
-                <select class="form-select">
-                  <option selected>Choisir un technicien</option>
+                <select class="form-select" multiple>
                   <option>Jean Dupont</option>
                   <option>Marie Rakoto</option>
                   <option>Pierre Andria</option>
                   <option>Sophie Rabe</option>
+                  
                 </select>
               </div>
             </div>
@@ -553,6 +470,10 @@
               <label class="form-label">Montant (Ar)</label>
               <input type="number" class="form-control" min="0">
             </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="facturationCheck">
+              <label class="form-check-label" for="facturationCheck">Facturation</label>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -565,7 +486,7 @@
 
   <!-- Detail de la mission -->
   {% for mission in missions %}
-  <div class="modal fade detail-modal" id="detailModal" tabindex="-1">
+  <div class="modal fade detail-modal" id="detailModal{{ mission.id }}" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
@@ -587,17 +508,25 @@
               <p>{{ mission.location }}</p>
               
               <h6>Dates</h6>
-              <p>{{ mission.start_date }} {{ mission.start_hour }} - {{ mission.end_date }} {{ mission.end_hour }}</p>
+              <p>{{ mission.start_date|date:"d F Y" }} à {{ mission.start_hour|time:"H:i" }} - {{ mission.end_date|date:"d F Y" }} à {{ mission.end_hour|time:"H:i" }}</p>
             </div>
             <div class="col-md-6">
               <h6>Statut</h6>
               <p><span class="badge badge-validated">Validé</span></p>
               
               <h6>Facturation</h6>
-              <p><span class="badge badge-billed">Facturé</span></p>
+              {% if mission.facturation %}
+                <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
+                {% else %}
+                <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
+                {% endif %}
               
-              <h6>Total à payer</h6>
-              <p class="fw-bold">250 000 Ar</p>
+                <h6 class="mt-4 mb-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #4558c9;">
+                  Total à payer</h6>
+
+              {% for expense in mission.depenses.all %}
+              <p class="fw-bold">{{ expense.total_expenses }} Ar</p>
+              
             </div>
           </div>
           
@@ -609,15 +538,15 @@
               <div class="row">
                 <div class="col-md-4">
                   <p class="mb-1">Nombre de jours</p>
-                  <h6>2 jours</h6>
+                  <h6>{{ expense.hosting_days }}</h6>
                 </div>
                 <div class="col-md-4">
                   <p class="mb-1">Tarif nuitée</p>
-                  <h6>50 000 Ar</h6>
+                  <h6>{{ expense.overnight_rate }} Ar</h6>
                 </div>
                 <div class="col-md-4">
                   <p class="mb-1">Total hébergement</p>
-                  <h6>100 000 Ar</h6>
+                  <h6>{{ expense.total_hosting }} Ar</h6>
                 </div>
               </div>
             </div>
@@ -627,11 +556,11 @@
               <div class="row">
                 <div class="col-md-6">
                   <p class="mb-1">Budget repas/jour</p>
-                  <h6>20 000 Ar</h6>
+                  <h6>{{ expense.meal_costs }}Ar</h6>
                 </div>
                 <div class="col-md-6">
-                  <p class="mb-1">Total repas (3 jours)</p>
-                  <h6>60 000 Ar</h6>
+                  <p class="mb-1">Total repas </p>
+                  <h6>{{ expense.total_meal_costs }} Ar</h6>
                 </div>
               </div>
             </div>
@@ -641,11 +570,11 @@
               <div class="row">
                 <div class="col-md-6">
                   <p class="mb-1">Moyen de transport</p>
-                  <h6>Véhicule de société</h6>
+                  <h6>{{ expense.transport }}</h6>
                 </div>
                 <div class="col-md-6">
                   <p class="mb-1">Coût du transport</p>
-                  <h6>70 000 Ar</h6>
+                  <h6>{{ expense.shipping_costs }} Ar</h6>
                 </div>
               </div>
             </div>
@@ -655,15 +584,16 @@
               <div class="row">
                 <div class="col-md-6">
                   <p class="mb-1">Description</p>
-                  <h6>Achat de matériel d'urgence</h6>
+                  <h6>{{expense.various_expenses_details}}</h6>
                 </div>
                 <div class="col-md-6">
                   <p class="mb-1">Montant</p>
-                  <h6>20 000 Ar</h6>
+                  <h6>{{ expense.various_expenses_price }} Ar</h6>
                 </div>
               </div>
             </div>
           </div>
+          {% endfor %}
           
           <h5 class="mt-4 mb-3">Historique des actions</h5>
           <ul class="list-group">
@@ -742,7 +672,9 @@
       </div>
     </div>
   </div>
+  {% include 'history.html' %}
 
+  
   <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script>
