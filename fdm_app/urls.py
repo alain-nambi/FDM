@@ -4,5 +4,5 @@ from .views import MissionListView
 urlpatterns = [
   #  path('', HomeView.as_view(), name='home'),
     path('', MissionListView.as_view(), name='missions'),
-    
+   # path('', MissionExpenseCreateView.as_view(), name='index'),
 ]

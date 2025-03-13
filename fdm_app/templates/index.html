@@ -342,24 +342,51 @@
         <!-- Pagination -->
         <nav aria-label="Page navigation">
           <ul class="pagination">
+            {% if missions.has_previous %}
             <li class="page-item">
+              <a class="page-link" href="?page={{ missions.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
               <a class="page-link" href="#" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
               </a>
             </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            {% endif %}
+
+            {% for num in missions.paginator.page_range %}
+            {% if missions.number == num %}
+            <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% elif num > missions.number|add:'-3' and num < missions.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if missions.has_next %}
             <li class="page-item">
+              <a class="page-link" href="?page={{ missions.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
               <a class="page-link" href="#" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
               </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+        
             </li>
           </ul>
         </nav>
       </div>
     </div>
     
+
   <!-- Ajouter les demandes de frais de mission -->
   <div class="modal fade" id="addMissionModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -369,49 +396,51 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" action="{% url 'index.html' %}">
+          <form method="POST" action="{% url 'missions' %}">
             {% csrf_token %}
+            
+
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Lieu de la mission</label>
-                <input type="text" class="form-control" placeholder="Ex: Antananarivo">
+                <input type="text" class="form-control" name="location" placeholder="Ex: Antananarivo">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Technicien</label>
-                <select class="form-select" multiple>
-                  <option>Jean Dupont</option>
-                  <option>Marie Rakoto</option>
-                  <option>Pierre Andria</option>
-                  <option>Sophie Rabe</option>
-                  
-                </select>
-              </div>
-            </div>
+      <label class="form-label">Technicien</label>
+      <select class="form-control" multiple="multiple" name="techniciens" id="technicien-select">
+       
+        {% for technician in technicians %}
+        <option value="{{ technician.id }}" >{{technician.first_name}} {{technician.last_name}} </option>
+       {% endfor %}
+        
+      </select>
+    </div>
+  </div>
             
             <div class="mb-3">
               <label class="form-label">Détails de la mission</label>
-              <textarea class="form-control" rows="3" placeholder="Décrivez les détails de la mission"></textarea>
+              <textarea class="form-control" name="mission_details" rows="3" placeholder="Décrivez les détails de la mission"></textarea>
             </div>
             
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Date de début</label>
-                <input type="date" class="form-control">
+                <input type="date" class="form-control" name="start_date" >
               </div>
               <div class="col-md-6">
                 <label class="form-label">Heure de début</label>
-                <input type="time" class="form-control">
+                <input type="time" class="form-control" name="start_hour" >
               </div>
             </div>
             
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Date de fin</label>
-                <input type="date" class="form-control">
+                <input type="date" class="form-control" name="end_date" >
               </div>
               <div class="col-md-6">
                 <label class="form-label">Heure de fin</label>
-                <input type="time" class="form-control">
+                <input type="time" class="form-control" name="end_hour" >
               </div>
             </div>
             
@@ -419,70 +448,66 @@
             <div class="row mb-3">
               <div class="col-md-4">
                 <label class="form-label">Nombre de jours</label>
-                <input type="number" class="form-control" min="0">
+                <input type="number" class="form-control" name="hosting_days" min="0">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Tarif nuitée (Ar)</label>
-                <input type="number" class="form-control" min="0">
+                <label class="form-label"  >Tarif nuitée (Ar)</label>
+                <input type="number" class="form-control" name="overnight_rate" min="0" >
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Total hébergement</label>
-                <input type="text" class="form-control" readonly>
-              </div>
+              
             </div>
             
             <h6 class="mt-4 mb-3">Repas</h6>
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Budget repas/jour (Ar)</label>
-                <input type="number" class="form-control" min="0">
+                <input type="number" class="form-control" name="meal_costs" min="0">
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Total repas</label>
-                <input type="text" class="form-control" readonly>
-              </div>
+              
             </div>
             
             <h6 class="mt-4 mb-3">Transport</h6>
             <div class="mb-3">
               <label class="form-label">Moyen de transport</label>
-              <select class="form-select">
+              <select class="form-select" name="transport" >
                 <option selected>Choisir un moyen de transport</option>
-                <option>Taxi-brousse</option>
-                <option>Véhicule de société</option>
-                <option>Avion</option>
-                <option>Bateau</option>
-                <option>À pieds</option>
-                <option>Transport matériels</option>
+                <option value="Taxi-brousse" >Taxi-brousse</option>
+                <option value="Véhicule de société">Véhicule de société</option>
+                <option value="Avion" >Avion</option>
+                <option value="Bateau" >Bateau</option>
+                <option value="À pieds" >À pieds</option>
+                <option value="Transport matériels">Transport matériels</option>
               </select>
             </div>
             <div class="mb-3">
               <label class="form-label">Coût du transport (Ar)</label>
-              <input type="number" class="form-control" min="0">
+              <input type="number" class="form-control" name="shipping_costs" min="0">
             </div>
             
             <h6 class="mt-4 mb-3">Divers frais</h6>
             <div class="mb-3">
               <label class="form-label">Description</label>
-              <input type="text" class="form-control" placeholder="Description des frais divers">
+              <input type="text" class="form-control" name="various_expenses_details" placeholder="Description des frais divers">
             </div>
             <div class="mb-3">
               <label class="form-label">Montant (Ar)</label>
-              <input type="number" class="form-control" min="0">
+              <input type="number" class="form-control" name="various_expenses_price" min="0">
             </div>
             <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="facturationCheck">
+              <input type="checkbox" class="form-check-input" name="facturation" id="facturationCheck">
               <label class="form-check-label" for="facturationCheck">Facturation</label>
             </div>
-          </form>
+          
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="button" class="btn btn-primary">Soumettre la demande</button>
+          <button type="submit" class="btn btn-primary">Soumettre la demande</button>
         </div>
+      </form>
       </div>
     </div>
   </div>
+
 
   <!-- Detail de la mission -->
   {% for mission in missions %}
