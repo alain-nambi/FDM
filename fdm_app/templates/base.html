@@ -1,4 +1,4 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,103 +7,17 @@
   <title>Gestion des Frais de Mission</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
-/* CSS du Sidebar */
-.sidebar {
-    background-color: var(--primary-color);
-    color: white;
-    height: 100vh;
-    width: 250px;
-    position: fixed;
-    transition: all 0.3s;
-    z-index: 1000;
-}
 
-.sidebar.collapsed {
-    width: 70px;
-}
-
-.sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.8);
-    padding: 15px 20px;
-    margin: 5px 0;
-    border-radius: 5px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-}
-
-.sidebar .nav-link:hover, .sidebar .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.sidebar .nav-link i {
-    margin-right: 15px;
-    font-size: 1.2rem;
-}
-
-.sidebar.collapsed .nav-link span {
-    display: none;
-}
-
-.sidebar.collapsed .nav-link i {
-    margin-right: 0;
-    font-size: 1.4rem;
-}
-
-.logo {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.logo img {
-    height: 30px;
-    margin-right: 10px;
-}
-
-.sidebar.collapsed .logo span {
-    display: none;
-}
-
-.sidebar.collapsed .logo {
-    justify-content: center;
-}
-
-.sidebar.collapsed .logo img {
-    margin-right: 0;
-}
-
-.btn-toggle-sidebar {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px 10px;
-}
-
-.main-content {
-    margin-left: 250px;
-    padding: 20px;
-    transition: all 0.3s;
-}
-
-.main-content.expanded {
-    margin-left: 70px;
-}
   </style>
 
   <body>
     <!-- HTML du Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="logo">
-           
-            <span class="ms-2">TaskPay</span>
+
+            <span class="ms-2">Frais de mission</span>
             <button class="btn-toggle-sidebar ms-auto" id="toggleSidebar">
                 <i class="fas fa-bars"></i>
             </button>
@@ -127,18 +41,46 @@
             </a>
         </div>
     </div>
+    <div class="main-content" id= "main-content">
     {% block content %}
 
     {% endblock %}
+    </div>
 
-      <!-- JavaScript -->
+      <!-- JavaScript pour lorsque le sidenav se ferme ou s'ouvre -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script> 
 <script>
-document.getElementById('toggleSidebar').addEventListener('click', function() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    sidebar.classList.toggle('collapsed');
-    mainContent.classList.toggle('expanded');
-});
+    document.addEventListener("DOMContentLoaded", function() {
+        const sidebar = document.querySelector(".sidebar");
+        const mainContent = document.querySelector(".main-content");
+        const toggleSidebarBtn = document.querySelector(".btn-toggle-sidebar");
+    
+        function updateMargin() {
+            const sidebarWidth = sidebar.classList.contains("collapsed") ? "55px" : "145px";
+            document.documentElement.style.setProperty("--sidebar-width", sidebarWidth);
+        }
+    
+        // Vérifier si le sidebar était fermé précédemment
+        if (localStorage.getItem("sidebarState") === "collapsed") {
+            sidebar.classList.add("collapsed");
+        }
+    
+        updateMargin(); // Mettre à jour la marge au chargement
+    
+        // Gérer le clic sur le bouton du sidebar
+        toggleSidebarBtn.addEventListener("click", function() {
+            sidebar.classList.toggle("collapsed");
+            updateMargin();
+    
+            // Sauvegarder l'état dans localStorage
+            if (sidebar.classList.contains("collapsed")) {
+                localStorage.setItem("sidebarState", "collapsed");
+            } else {
+                localStorage.setItem("sidebarState", "open");
+            }
+        });
+    });
+    
+    
 </script>
 </body>

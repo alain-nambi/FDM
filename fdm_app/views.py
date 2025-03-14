@@ -15,13 +15,11 @@ import re
 class MissionListView(View):
     
     #obtenir la liste nécessaire pour afficher les missions et les techniciens            
-    #pagination de la liste
+    #rechercher les missions
     def get(self, request, *args, **kwargs):
         # Récupérer toutes les missions
         all_missions = Mission.objects.all().order_by('-id')
         # Filtrer les missions en fonction de la recherche
-        
-        
         search_query = request.GET.get('search', '')
         if search_query:
             mois_fr = {
@@ -57,17 +55,32 @@ class MissionListView(View):
                     Q(end_date__year=search_query)
                 )
             else:
+                
                 # Recherche standard
-                all_missions = all_missions.filter(
-                    Q(id__icontains=search_query) |
-                    Q(location__icontains=search_query) |
-                    Q(techniciens__first_name__icontains=search_query) |
-                    Q(techniciens__last_name__icontains=search_query) |
-                    Q(mission_details__icontains=search_query)
-                ).distinct()
-
-        
-        paginator = Paginator(all_missions, 5)
+                search_terms = search_query.split(' ')
+                if len(search_terms) == 1:
+                    all_missions = all_missions.filter(
+                        Q(id__icontains=search_query) |
+                        Q(mission_details__icontains=search_query) |
+                        Q(location__icontains=search_query) |
+                        Q(techniciens__first_name__icontains=search_query) |
+                        Q(techniciens__last_name__icontains=search_query)
+                        
+                    ).distinct()
+                else:
+                    all_missions = all_missions.filter(
+                        Q(id__icontains=search_query) |
+                        Q(location__icontains=search_query) |
+                        Q(mission_details__icontains=search_query) |
+                 (
+                 (Q(techniciens__first_name__icontains=search_terms[0]) & Q(techniciens__last_name__icontains=search_terms[1])) |
+                 (Q(techniciens__first_name__icontains=search_terms[1]) & Q(techniciens__last_name__icontains=search_terms[0]))
+                 )
+                       ).distinct()
+                    
+                    
+      #pagination 
+        paginator = Paginator(all_missions, 10)
         page = request.GET.get('page',1)
         try:
             missions = paginator.page(page)
@@ -84,7 +97,7 @@ class MissionListView(View):
         }
         return render(request, 'index.html', context)
         
-        
+#stockage des données de la mission dans la base 
     def post(self, request, *args, **kwargs):
         mission_details = request.POST.get('mission_details')
         start_date = request.POST.get('start_date')
@@ -100,7 +113,8 @@ class MissionListView(View):
         shipping_costs = Decimal(request.POST.get('shipping_costs', 0))
         various_expenses_details = request.POST.get('various_expenses_details')
         various_expenses_price = Decimal(request.POST.get('various_expenses_price',0))
-    # Créer une nouvelle mission avec les données récupérées
+        
+        # Créer une nouvelle mission avec les données récupérées
         mission = Mission.objects.create(
             mission_details=mission_details,
             start_date=start_date,

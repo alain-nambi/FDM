@@ -1,0 +1,45 @@
+<!-- Validation Modal -->
+<div class="modal fade" id="validateModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Valider la demande</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir valider cette demande de frais de mission ?</p>
+          <div class="mb-3">
+            <label class="form-label">Commentaire (optionnel)</label>
+            <textarea class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-success">Valider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refuse Modal -->
+  <div class="modal fade" id="refuseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Refuser la demande</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir refuser cette demande de frais de mission ?</p>
+          <div class="mb-3">
+            <label class="form-label">Motif du refus <span class="text-danger">*</span></label>
+            <textarea class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger">Refuser</button>
+        </div>
+      </div>
+    </div>
+  </div>
