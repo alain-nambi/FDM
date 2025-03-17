@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView, FormView, TemplateView
 from django.urls import reverse_lazy
 from .models import Mission, Expense,Technician
 from django.views import View
@@ -77,10 +77,15 @@ class MissionListView(View):
                  (Q(techniciens__first_name__icontains=search_terms[1]) & Q(techniciens__last_name__icontains=search_terms[0]))
                  )
                        ).distinct()
-                    
-                    
+           
+        per_page = request.GET.get('per_page', 10)
+        try:
+            per_page = int(per_page)
+        except (ValueError, TypeError):
+            per_page = 10
+
       #pagination 
-        paginator = Paginator(all_missions, 10)
+        paginator = Paginator(all_missions, per_page)
         page = request.GET.get('page',1)
         try:
             missions = paginator.page(page)
@@ -93,7 +98,9 @@ class MissionListView(View):
         
         context = {
             'missions': missions,
-            'technicians': technicians
+            'technicians': technicians,
+            'active_tab': 'missions' #pour le style lorsqu'on clique sur historique ou accueil
+            
         }
         return render(request, 'index.html', context)
         
@@ -145,10 +152,15 @@ class MissionListView(View):
     
     
 
-    
-   
 
-
+#historique des demandes validées
+class HistoryView(TemplateView):
+    template_name = 'history.html'
+    # juste pour lorsqu'on clique sur historique il hérite du style de couleur bleu 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'history'
+        return context
     
     
     

@@ -56,7 +56,20 @@ class Mission(models.Model):
         verbose_name='Facturation'
     )
     
+    STATUS_CHOICES = [
+        ('NEW', 'New'),
+        ('REFUSED', 'Refused'),
+        ('VALIDATED', 'Validated'),
+    ]
     
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='NEW',
+        verbose_name='Status',
+        help_text='Statut de la mission'
+    )
+
    
     
 class Expense(models.Model):

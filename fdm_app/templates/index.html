@@ -9,34 +9,37 @@
   <!-- Main Content -->
   <div class="main-content">
     <!-- En-tête de la page  -->
-    {% include 'account.html' %}
-
+   {% include 'account.html' %}
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <a class="nav-link" href="#">Account Information</a>
+        <a class="nav-link {% if active_tab == 'missions' %}active{% endif %}" href="{% url 'missions' %}">
+          <i class="fas fa-home me-1"></i> Accueil
+        </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link active" href="#">Cloud Accounts</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Historique</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Continuous Delivery</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Plans & Payments</a>
+        <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'history' %}">
+          <i class="fas fa-history me-1"></i> Historique
+        </a>
       </li>
     </ul>
 
     <!-- Listes des demandes de frais de mission Section -->
     <div class="card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Gestion des Frais de Mission</h5>
+        <h5 class="mb-0">Liste des Frais de Mission</h5>
         <!--rechercher des demandes de frais de mission -->
         <div class="d-flex">
           <form method="GET" action="{% url 'missions' %}" class="d-flex me-2">
+            <!-- triage du nombre de mission à afficher -->
+            <select class="form-select form-select-sm me-3" style="width: auto; min-width: 80px;" name="per_page" onchange="this.form.submit()">
+              
+              <option value="10" {% if request.GET.per_page == '10' or not request.GET.per_page %}selected{% endif %}>10</option>
+              <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
+              <option value="30" {% if request.GET.per_page == '30' %}selected{% endif %}>30</option>
+              
+            </select>
+        
             <div class="input-group">
               <input type="text" class="form-control" name="search" placeholder="Rechercher..." 
                      value="{{ request.GET.search|default:'' }}" aria-label="Search">
@@ -44,12 +47,14 @@
                 <i class="fas fa-search"></i>
               </button>
             </div>
+         
           </form>
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMissionModal">
             <i class="fas fa-plus"></i> Ajouter une demande
           </button>
         </div>
       </div>
+
       <div class="card-body fade-in">
         <div class="table-responsive">
           <table class="table table-hover">
@@ -93,7 +98,19 @@
                 <td> {{ expense.total_expenses }} Ar </td>
                 {% endfor %}
                 
-                <td><span class="badge badge-validated">Validé</span></td>
+                <!--statut de la mission-->
+               
+                <td>
+                  {% if mission.status == "NEW" %}
+                    <span class="badge badge-new" style="background-color:#4688A3">nouveau</span>
+                  {% elif mission.status == "REFUSED" %}
+                    <span class="badge badge-refused" style="background-color: red;">refusée</span>
+                  {% elif mission.status == "VALIDATED" %}
+                    <span class="badge badge-validated" style="background-color: green;">validée</span>
+
+                  {% endif %}
+                </td>
+               
 
                 <!-- Icon de valider , details et refuser -->
                 <td class="action-icons">
@@ -108,7 +125,6 @@
           </table>
         </div>
         
-
         <!-- Pagination -->
         <div class="pagination-container">
           <nav aria-label="Page navigation">
@@ -157,7 +173,7 @@
         </div>
     
   <!-- Ajouter les demandes de frais de mission -->
-  <div class="modal fade" id="addMissionModal" tabindex="-1">
+      <div class="modal fade" id="addMissionModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
@@ -168,7 +184,6 @@
           <form method="POST" action="{% url 'missions' %}">
             {% csrf_token %}
             
-
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Lieu de la mission</label>
@@ -185,7 +200,12 @@
       </select>
     </div>
   </div>
-            
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" name="facturation" id="facturationCheck">
+    <label class="form-check-label" for="facturationCheck">
+      <b><font size="4" color="#4558c9">Facturer</font></b>
+    </label>
+</div>
             <div class="mb-3">
               <label class="form-label">Détails de la mission</label>
               <textarea class="form-control" name="mission_details" rows="3" placeholder="Décrivez les détails de la mission"></textarea>
@@ -196,11 +216,12 @@
                 <label class="form-label">Date de début</label>
                 <input type="date" class="form-control" name="start_date" >
               </div>
+
               <div class="col-md-6">
                 <label class="form-label">Heure de début</label>
                 <input type="time" class="form-control" name="start_hour" >
               </div>
-            </div>
+             </div>
             
             <div class="row mb-3">
               <div class="col-md-6">
@@ -213,29 +234,35 @@
               </div>
             </div>
             
-            <h6 class="mt-4 mb-3">Hébergement</h6>
+            <h6 class="mt-4 mb-3">
+              <b><font size="4" color="#4558c9">Hébergement</font></b>
+            </h6>
             <div class="row mb-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label">Nombre de jours</label>
                 <input type="number" class="form-control" name="hosting_days" min="0">
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label"  >Tarif nuitée (Ar)</label>
                 <input type="number" class="form-control" name="overnight_rate" min="0" >
               </div>
               
             </div>
             
-            <h6 class="mt-4 mb-3">Repas</h6>
+            <h6 class="mt-4 mb-3">
+              <b><font size="4" color="#4558c9">Repas</font></b>
+            </h6>
             <div class="row mb-3">
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <label class="form-label">Budget repas/jour (Ar)</label>
                 <input type="number" class="form-control" name="meal_costs" min="0">
               </div>
               
             </div>
             
-            <h6 class="mt-4 mb-3">Transport</h6>
+            <h6 class="mt-4 mb-3">
+              <b><font size="4" color="#4558c9">Transport</font></b>
+            </h6>
             <div class="mb-3">
               <label class="form-label">Moyen de transport</label>
               <select class="form-select" name="transport" >
@@ -253,7 +280,9 @@
               <input type="number" class="form-control" name="shipping_costs" min="0">
             </div>
             
-            <h6 class="mt-4 mb-3">Divers frais</h6>
+            <h6 class="mt-4 mb-3">
+              <b><font size="4" color="#4558c9">Divers frais</font></b>
+            </h6>
             <div class="mb-3">
               <label class="form-label">Description</label>
               <input type="text" class="form-control" name="various_expenses_details" placeholder="Description des frais divers">
@@ -262,11 +291,6 @@
               <label class="form-label">Montant (Ar)</label>
               <input type="number" class="form-control" name="various_expenses_price" min="0">
             </div>
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" name="facturation" id="facturationCheck">
-              <label class="form-check-label" for="facturationCheck">Facturation</label>
-            </div>
-          
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -289,7 +313,7 @@
         <div class="modal-body">
           <div class="row mb-4">
             <div class="col-md-6">
-              <h6>Technicien</h6>
+              <b><font size="4" color="#4558c9"> Techniciens </font></b>
               <p> {% for technicien in mission.techniciens.all %}
                 {{ technicien.first_name }} {{ technicien.last_name }}<br>
               {% empty %}
@@ -297,26 +321,35 @@
               {% endfor %}
               </p>
               
-              <h6>Lieu de la mission</h6>
+              <b><font size="4" color="#4558c9"> Lieu de la mission </font></b>
               <p>{{ mission.location }}</p>
-              
-              <h6>Dates</h6>
+
+              <b><font size="4" color="#4558c9"> Dates </font></b>
               <p>{{ mission.start_date|date:"d F Y" }} à {{ mission.start_hour|time:"H:i" }} - {{ mission.end_date|date:"d F Y" }} à {{ mission.end_hour|time:"H:i" }}</p>
             </div>
             <div class="col-md-6">
-              <h6>Statut</h6>
-              <p><span class="badge badge-validated">Validé</span></p>
+              <b><font size="4" color="#4558c9"> Status </font></b>
               
-              <h6>Facturation</h6>
+              <p>{% if mission.status == "NEW" %}
+                <span class="badge badge-new" style="background-color:#4688A3">nouveau</span>
+              {% elif mission.status == "REFUSED" %}
+                <span class="badge badge-refused" style="background-color: red;">refusée</span>
+              {% elif mission.status == "VALIDATED" %}
+                <span class="badge badge-validated" style="background-color: green;">validée</span>
+              {% endif %}</p>
+              
+              <b><font size="4" color="#4558c9"> Facturation </font></b>
+              <Br>
+              
               {% if mission.facturation %}
                 <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
                 {% else %}
                 <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
                 {% endif %}
               
-                <h6 class="mt-4 mb-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #4558c9;">
-                  Total à payer</h6>
-
+                <h6 class="mt-4 mb-3">
+                  <b><font size="4" color="#4558c9">Total à payer</font></b>
+                </h6>
               {% for expense in mission.depenses.all %}
               <p class="fw-bold">{{ expense.total_expenses }} Ar</p>
               
@@ -388,7 +421,7 @@
           </div>
           {% endfor %}
           
-          <h5 class="mt-4 mb-3">Historique des actions</h5>
+          <b><font size="4" color="#4558c9"> Historique des actions </font></b>
           <ul class="list-group">
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
@@ -418,10 +451,7 @@
     </div>
   </div>
   {% endfor %}
-
   {% include 'validation_modal.html' %}
-
-  {% include 'history.html' %}
 
   <!-- JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

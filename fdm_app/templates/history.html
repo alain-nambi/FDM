@@ -1,4 +1,26 @@
 <!-- History Section -->
+
+{% extends 'base.html' %}
+
+{% block title %}Historique des demandes{% endblock %}
+
+{% block content %}
+<div class="main-content">
+ <!-- Navigation Tabs -->
+ {% include 'account.html' %}
+ <ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'missions' %}active{% endif %}" href="{% url 'missions' %}">
+      <i class="fas fa-home me-1"></i> Accueil
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'history' %}">
+      <i class="fas fa-history me-1"></i> Historique
+    </a>
+  </li>
+</ul>
+
 <div class="card">
     <div class="card-header">
       <h5 class="mb-0">Historique des demandes</h5>
@@ -47,3 +69,5 @@
     </div>
   </div>
 </div>
+</div>
+{% endblock %}
