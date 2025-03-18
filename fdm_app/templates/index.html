@@ -189,7 +189,7 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Lieu de la mission</label>
-                <input type="text" class="form-control" name="location" placeholder="Ex: Antananarivo">
+                <input type="text" class="form-control" name="location" placeholder="Ex: Antananarivo" required>
               </div>
               <div class="col-md-6">
       <label class="form-label">Technicien</label>
@@ -207,39 +207,39 @@
     <label class="form-check-label" for="facturationCheck">
       <b><font size="4" color="#4558c9">Facturer</font></b>
     </label>
-</div>
+         </div>
             <div class="mb-3">
               <h6 class="mt-4 mb-3">
                 <b><font size="4" color="#4558c9">Détails de la mission</font></b>
               </h6>
-              <textarea class="form-control" name="mission_details" rows="3" placeholder="Décrivez les détails de la mission"></textarea>
+              <textarea class="form-control" name="mission_details" rows="3" placeholder="Décrivez les détails de la mission" required></textarea>
             </div>
             
 
             <h6 class="mt-4 mb-3">
-              <b><font size="4" color="#4558c9">Date de la mission</font></b>
+              <b><font size="4" color="#4558c9" >Date de la mission</font></b>
             </h6>
             <div class="row mb-3">
               <div class="col-md-6">
                 
                 <label class="form-label">Date de début</label>
-                <input type="date" class="form-control" name="start_date" >
+                <input type="date" class="form-control" name="start_date" required>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">Heure de début</label>
-                <input type="time" class="form-control" name="start_hour" >
+                <input type="time" class="form-control" name="start_hour" required>
               </div>
              </div>
             
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Date de fin</label>
-                <input type="date" class="form-control" name="end_date" >
+                <input type="date" class="form-control" name="end_date" required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Heure de fin</label>
-                <input type="time" class="form-control" name="end_hour" >
+                <input type="time" class="form-control" name="end_hour" required>
               </div>
             </div>
             
@@ -437,7 +437,7 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
                 <span class="text-muted small">28/02/2025 14:32</span>
-                <p class="mb-0">Demande créée par Jean Dupont</p>
+                <p class="mb-0">Demande créée par {{ user.username }}</p>
               </div>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">

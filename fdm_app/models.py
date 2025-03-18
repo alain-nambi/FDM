@@ -1,13 +1,23 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 
+
+class Worker(models.Model):
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='worker')
+    poste = models.CharField(max_length=100, null=True, blank=True) 
+    
+    def __str__(self):
+        return self.user_id.username if self.user_id else "Employé sans utilisateur"
+    
+    
+#Technicien
 class Technician(models.Model):
-   
     first_name = models.CharField(
         max_length=50,
         help_text='nom du technicien'
     )
+    
     last_name = models.CharField(
         max_length=50,
         help_text='prenom du technicien'
@@ -16,14 +26,11 @@ class Technician(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
     
-    
-
+#mission 
 class Mission(models.Model):
-    
     
     techniciens = models.ManyToManyField(Technician, related_name="missions")
    
-    
     mission_details = models.TextField(
         help_text='details de la mission',
         verbose_name='Mission Details'
@@ -33,14 +40,17 @@ class Mission(models.Model):
         help_text='date de debut de la mission',
         verbose_name='Start Date'
     )
+    
     start_hour = models.TimeField(
         help_text='heure de debut de la mission',
         verbose_name='Start Hour'
     )
+    
     end_date = models.DateField(
         help_text='date de fin de la mission',
         verbose_name='End Date'
     )
+    
     end_hour = models.TimeField(
         help_text='heure de fin de la mission',
         verbose_name='End Hour'
@@ -71,9 +81,8 @@ class Mission(models.Model):
     )
 
    
-    
+    #depenses 
 class Expense(models.Model):
-    
     
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE, related_name="depenses")
     
@@ -87,7 +96,6 @@ class Expense(models.Model):
         decimal_places=2,
         default=0.00,
         help_text='tarif nuitée'
-       
     )
     
     total_hosting = models.DecimalField(

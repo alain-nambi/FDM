@@ -1,17 +1,22 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, FormView, TemplateView
 from django.urls import reverse_lazy
-from .models import Mission, Expense, Technician
+from .models import Mission, Expense, Technician, Worker
 from django.views import View
 from decimal import Decimal
+from django.contrib.auth.views import LoginView, LogoutView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.db.models.functions import TruncMonth, ExtractMonth, ExtractYear
 from django.utils.dateparse import parse_date
+from django.contrib import messages
+from django.contrib.auth.models import User
 from datetime import datetime
 import calendar
 import re
 
+
+#liste des missions
 class MissionListView(View):
     # obtenir la liste nécessaire pour afficher les missions et les techniciens
     # rechercher les missions
@@ -108,6 +113,7 @@ class MissionListView(View):
         }
         return render(request, 'index.html', context)
         
+        
     # stockage des données de la mission dans la base
     def post(self, request, *args, **kwargs):
         mission_details = request.POST.get('mission_details')
@@ -156,6 +162,7 @@ class MissionListView(View):
         return redirect('missions')
 
 
+# historiques des missions validés 
 class HistoryView(TemplateView):
     template_name = 'history.html'
     
@@ -164,3 +171,62 @@ class HistoryView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['active_tab'] = 'history'
         return context
+    
+    
+# Inscription
+class RegisterView(TemplateView):
+    template_name = "register.html"
+    success_url = reverse_lazy("login")
+
+    def post(self, request, *args, **kwargs):
+        if request.method == "POST":
+            username = request.POST["username"]
+            first_name = request.POST["first_name"]
+            last_name = request.POST["last_name"]
+            poste = request.POST["poste"]
+            password = request.POST["password"]
+            email = request.POST["email"]
+
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Ce nom d'utilisateur existe déjà")
+            else:
+                user = User.objects.create_user(
+                    username=username,
+                    email=email, password=password,
+                    first_name=first_name,
+                    last_name=last_name
+                    )
+                
+                Worker.objects.create(user_id=user, poste=poste)
+                 # Si l'utilisateur est un technicien, créer aussi une entrée dans le modèle Technician
+                if poste == "Techniciens":
+                    Technician.objects.create(
+                        first_name=first_name,
+                        last_name=last_name
+                    )
+                messages.success(request,"Inscription réussie, connectez-vous maintenant")
+                return redirect("login")
+
+        return self.get(request, *args, **kwargs)
+
+
+# Connexion
+class CustomLoginView(LoginView):
+    template_name = "login.html"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = self.request.user
+
+        # Vérifier si l'utilisateur a un employé associé
+        return redirect("missions")
+
+
+# Déconnexion
+class CustomLogoutView(LogoutView):
+    next_page = reverse_lazy("login")
+
+    def dispatch(self, request, *args, **kwargs):
+        messages.success(request, "Vous avez été déconnecté.")
+        return super().dispatch(request, *args, **kwargs)
+
