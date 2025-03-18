@@ -230,3 +230,77 @@ class CustomLogoutView(LogoutView):
         messages.success(request, "Vous avez été déconnecté.")
         return super().dispatch(request, *args, **kwargs)
 
+
+# Ajouter cette classe à votre fichier views.py
+class EditMissionView(View):
+    def post(self, request, mission_id, *args, **kwargs):
+        mission = Mission.objects.get(id=mission_id)
+        
+        # Récupérer les données du formulaire
+        mission_details = request.POST.get('mission_details')
+        start_date = request.POST.get('start_date')
+        start_hour = request.POST.get('start_hour')
+        end_date = request.POST.get('end_date')
+        end_hour = request.POST.get('end_hour')
+        location = request.POST.get('location')
+        facturation = request.POST.get('facturation') == 'on'
+        
+        # Mettre à jour la mission
+        mission.mission_details = mission_details
+        mission.start_date = start_date
+        mission.start_hour = start_hour
+        mission.end_date = end_date
+        mission.end_hour = end_hour
+        mission.location = location
+        mission.facturation = facturation
+        mission.save()
+        
+        # Mise à jour des techniciens
+        mission.techniciens.clear()
+        techniciens_ids = request.POST.getlist('techniciens')
+        for tech_id in techniciens_ids:
+            technician = Technician.objects.get(id=tech_id)
+            mission.techniciens.add(technician)
+        
+        # Mise à jour des dépenses
+        try:
+            expense = mission.depenses.first()  # Suppose que mission.depenses est le related_name dans le modèle Expense
+            
+            hosting_days = int(request.POST.get('hosting_days', 0))
+            overnight_rate = Decimal(request.POST.get('overnight_rate', 0))
+            meal_costs = Decimal(request.POST.get('meal_costs', 0))
+            transport = request.POST.get('transport')
+            shipping_costs = Decimal(request.POST.get('shipping_costs', 0))
+            various_expenses_details = request.POST.get('various_expenses_details')
+            various_expenses_price = Decimal(request.POST.get('various_expenses_price', 0))
+            
+            # Mettre à jour les valeurs
+            expense.hosting_days = hosting_days
+            expense.overnight_rate = overnight_rate
+            expense.meal_costs = meal_costs
+            expense.transport = transport
+            expense.shipping_costs = shipping_costs
+            expense.various_expenses_details = various_expenses_details
+            expense.various_expenses_price = various_expenses_price
+            
+            # Recalcul des totaux (si nécessaire)
+            # Note: Ceci dépend de votre modèle et de vos calculs spécifiques
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            days_diff = (end_dt - start_dt).days + 1  # +1 pour inclure le jour de fin
+            
+            expense.total_hosting = hosting_days * overnight_rate
+            expense.total_meal_costs = meal_costs * days_diff
+            expense.total_expenses = (
+                expense.total_hosting + 
+                expense.total_meal_costs + 
+                shipping_costs + 
+                various_expenses_price
+            )
+            
+            expense.save()
+        except Exception as e:
+            # Gérer l'erreur si nécessaire
+            pass
+        
+        return redirect('missions')
