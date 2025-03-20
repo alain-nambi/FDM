@@ -23,7 +23,7 @@
 
 <div class="card">
     <div class="card-header">
-      <h5 class="mb-0">Historique des demandes </h5>
+      <h5 class="mb-0">Historique des demandes validées </h5>
     </div>
     <div class="card-body fade-in">
       <div class="table-responsive">
@@ -37,6 +37,7 @@
               <th>Total payé</th>
               <th>Facturation</th>
               <th>Statut final</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -72,9 +73,19 @@
 
 
               <td><span class="badge badge-closed">Clôturé</span></td>
-              {% empty %}
+
+            <td>
+              <i class="fas fa-info-circle details" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#detailModal{{ mission.id }}" 
+                  title="Détails">
+              </i>
+            </td>
+
             </tr>
+           {% include 'detail_modal.html' %}
             {% endfor %}
+            
           </tbody>
         </table>
       </div>
@@ -82,4 +93,8 @@
   </div>
 </div>
 </div>
+
+
+
+
 {% endblock %}

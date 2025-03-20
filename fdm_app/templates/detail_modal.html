@@ -1,0 +1,157 @@
+<!-- Detail de la mission modal -->
+{% for mission in missions %}
+<div class="modal fade detail-modal" id="detailModal{{ mission.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Détails de la mission - {{ mission.id }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <b><font size="4" color="#4558c9"> Techniciens </font></b>
+            <p> {% for technicien in mission.techniciens.all %}
+              {{ technicien.first_name }} {{ technicien.last_name }}<br>
+            {% empty %}
+              Aucun technicien
+            {% endfor %}
+            </p>
+            
+            <b><font size="4" color="#4558c9"> Lieu de la mission </font></b>
+            <p>{{ mission.location }}</p>
+
+            <b><font size="4" color="#4558c9"> Dates </font></b>
+            <p>{{ mission.start_date|date:"d F Y" }} à {{ mission.start_hour|time:"H:i" }} - {{ mission.end_date|date:"d F Y" }} à {{ mission.end_hour|time:"H:i" }}</p>
+          </div>
+          <div class="col-md-6">
+            <b><font size="4" color="#4558c9"> Status </font></b>
+            
+            <p>{% if mission.status == "NEW" %}
+              <span class="badge badge-new" style="background-color:#4688A3">nouveau</span>
+            {% elif mission.status == "REFUSED" %}
+              <span class="badge badge-refused" style="background-color: red;">refusée</span>
+            {% elif mission.status == "VALIDATED" %}
+              <span class="badge badge-validated" style="background-color: green;">validée</span>
+            {% endif %}</p>
+            
+            <b><font size="4" color="#4558c9"> Facturation </font></b>
+            <Br>
+            
+            {% if mission.facturation %}
+              <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
+              {% else %}
+              <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
+              {% endif %}
+            
+              <h6 class="mt-4 mb-3">
+                <b><font size="4" color="#4558c9">Total à payer</font></b>
+              </h6>
+            {% for expense in mission.depenses.all %}
+            <p class="fw-bold">{{ expense.total_expenses }} Ar</p>
+            
+          </div>
+        </div>
+        
+        <h5 class="mb-3">Détails des frais</h5>
+        
+        <div class="detail-sections">
+          <div class="detail-section">
+            <h5>Hébergement</h5>
+            <div class="row">
+              <div class="col-md-4">
+                <p class="mb-1">Nombre de jours</p>
+                <h6>{{ expense.hosting_days }}</h6>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1">Tarif nuitée</p>
+                <h6>{{ expense.overnight_rate }} Ar</h6>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1">Total hébergement</p>
+                <h6>{{ expense.total_hosting }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Repas</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Budget repas/jour</p>
+                <h6>{{ expense.meal_costs }}Ar</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Total repas </p>
+                <h6>{{ expense.total_meal_costs }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Transport</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Moyen de transport</p>
+                <h6>{{ expense.transport }}</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Coût du transport</p>
+                <h6>{{ expense.shipping_costs }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Frais divers</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Description</p>
+                <h6>{{expense.various_expenses_details}}</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Montant</p>
+                <h6>{{ expense.various_expenses_price }} Ar</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        <!--historique des actions dans le details-->
+        <h6 class="mt-4 mb-3">
+          <b><font size="4" color="#4558c9">Historique des actions</font></b>
+        </h6>
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small">28/02/2025 14:32</span>
+              <p class="mb-0">Demande créée par Tal</p>
+            </div>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              {% if mission.status == 'REFUSED' %}
+              <div class="mt-2 p-2 ">
+                <span class="badge bg-danger">Motif du refus :</span>
+                <p class="mt-1 mb-0">{{ mission.refusal_reason }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small">05/03/2025 11:30</span>
+              <p class="mb-0">Facture établie par Service Comptabilité</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-primary">Télécharger PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}

@@ -23,8 +23,8 @@ class MissionListView(View):
     # obtenir la liste nécessaire pour afficher les missions et les techniciens
     # rechercher les missions
     def get(self, request, *args, **kwargs):
-        # Récupérer toutes les missions
-        all_missions = Mission.objects.all().order_by('-id')
+        # Récupérer toutes les missions sauf celles avec le statut VALIDATED
+        all_missions = Mission.objects.exclude(status='VALIDATED').order_by('-id')
         # Filtrer les missions en fonction de la recherche
         search_query = request.GET.get('search', '')
         if search_query:
