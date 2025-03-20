@@ -114,11 +114,29 @@
 
                 <!-- Icon de valider ,mise à jour, details et refuser -->
                 <td class="action-icons">
-                  <i class="fas fa-check-circle validate" data-bs-toggle="modal" data-bs-target="#validateModal"></i>
-                  <i class="fas fa-times-circle refuse" data-bs-toggle="modal" data-bs-target="#refuseModal"></i>
-                  <i class="fas fa-info-circle details" data-bs-toggle="modal" data-bs-target="#detailModal{{ mission.id }}"></i>
+                  <i class="fas fa-check-circle validate"
+                    data-bs-toggle="modal"
+                    data-bs-target="#validateModal"
+                    data-mission-id="{{ mission.id }}"
+                    title = "Valider" >
+                  </i>
+                  <i class="fas fa-times-circle refuse" 
+                     data-bs-toggle="modal"  
+                     data-bs-target="#refuseModal" 
+                     data-mission-id = "{{ mission.id }}"
+                     title = "Refuser">
+                  </i>
+                  <i class="fas fa-info-circle details" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#detailModal{{ mission.id }}" 
+                  title="Détails">
+                   </i>
                 <!-- Bouton pour modifier la mission -->
-                <i class="fas fa-edit edit" data-bs-toggle="modal" data-bs-target="#editMissionModal{{ mission.id }}"></i>
+                   <i class="fas fa-edit edit" 
+                     data-bs-toggle="modal" 
+                     data-bs-target="#editMissionModal{{ mission.id }}" 
+                     title="Modifier">
+                  </i>
                 </td>
               {% endfor %}
 
@@ -310,8 +328,8 @@
     </div>
   </div>
 
-  
-  <!-- Modal pour modifier une mission, mettre a jour etc -->
+
+  <!-- Modal pour modifier une mission, mettre a jour  -->
 {% for mission in missions %}
 <div class="modal fade" id="editMissionModal{{ mission.id }}" tabindex="-1">
   <div class="modal-dialog modal-lg">
@@ -321,7 +339,9 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+
         <form method="POST" action="{% url 'edit_mission' mission.id %}">
+
           {% csrf_token %}
           <h6 class="mt-4 mb-3">
             <b><font size="4" color="#4558c9">Lieu et techniciens</font></b>
@@ -333,6 +353,7 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Technicien</label>
+
               <select class="form-control" multiple="multiple" name="techniciens" id="technicien-select-edit-{{ mission.id }}">
                 {% for technician in technicians %}
                 <option value="{{ technician.id }}" {% if technician in mission.techniciens.all %}selected{% endif %}>
@@ -386,11 +407,11 @@
           <div class="row mb-3">
             <div class="col-md-6">
               <label class="form-label">Nombre de jours</label>
-              <input type="number" class="form-control" name="hosting_days" min="0" value="{{ expense.hosting_days }}">
+              <input type="number" class="form-control" name="hosting_days" min="0" value="{{ expense.hosting_days| floatformat }}">
             </div>
             <div class="col-md-6">
               <label class="form-label">Tarif nuitée (Ar)</label>
-              <input type="number" class="form-control" name="overnight_rate" min="0" value="{{ expense.overnight_rate }}">
+              <input type="number" class="form-control" name="overnight_rate" min="0" value="{{ expense.overnight_rate|floatformat }}">
             </div>
           </div>
           
@@ -400,7 +421,7 @@
           <div class="row mb-3">
             <div class="col-md-12">
               <label class="form-label">Budget repas/jour (Ar)</label>
-              <input type="number" class="form-control" name="meal_costs" min="0" value="{{ expense.meal_costs }}">
+              <input type="number" class="form-control" name="meal_costs" min="0" value="{{ expense.meal_costs | floatformat }}">
             </div>
           </div>
           
@@ -420,7 +441,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Coût du transport (Ar)</label>
-            <input type="number" class="form-control" name="shipping_costs" min="0" value="{{ expense.shipping_costs }}">
+            <input type="number" class="form-control" name="shipping_costs" min="0" value="{{ expense.shipping_costs|floatformat  }}">
           </div>
           
           <h6 class="mt-4 mb-3">
@@ -432,7 +453,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Montant (Ar)</label>
-            <input type="number" class="form-control" name="various_expenses_price" min="0" value="{{ expense.various_expenses_price }}">
+            <input type="number" class="form-control" name="various_expenses_price" min="0" value="{{ expense.various_expenses_price|floatformat }}">
           </div>
           {% endfor %}
       </div>
@@ -446,7 +467,7 @@
 </div>
 {% endfor %}
 
-  <!-- Detail de la mission -->
+  <!-- Detail de la mission modal -->
   {% for mission in missions %}
   <div class="modal fade detail-modal" id="detailModal{{ mission.id }}" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -565,7 +586,7 @@
             </div>
           </div>
           {% endfor %}
-          
+          <!--historique des actions dans le details-->
           <h6 class="mt-4 mb-3">
             <b><font size="4" color="#4558c9">Historique des actions</font></b>
           </h6>
@@ -578,8 +599,12 @@
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
-                <span class="text-muted small">01/03/2025 09:15</span>
-                <p class="mb-0">Demande validée par Rakotondrabe Eric</p>
+                {% if mission.status == 'REFUSED' %}
+                <div class="mt-2 p-2 ">
+                  <span class="badge bg-danger">Motif du refus :</span>
+                  <p class="mt-1 mb-0">{{ mission.refusal_reason }}</p>
+                </div>
+                {% endif %}
               </div>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -597,6 +622,7 @@
       </div>
     </div>
   </div>
+
   {% endfor %}
   {% include 'validation_modal.html' %}
 
@@ -610,7 +636,28 @@
       const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
       
     });
-    
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Pour la validation
+      var validateModal = document.getElementById('validateModal');
+      if (validateModal) {
+        validateModal.addEventListener('show.bs.modal', function(event) {
+          var button = event.relatedTarget;
+          var missionId = button.getAttribute('data-mission-id');
+          document.getElementById('validateMissionId').value = missionId;
+        });
+      }
+      
+      // Pour le refus
+      var refuseModal = document.getElementById('refuseModal');
+      if (refuseModal) {
+        refuseModal.addEventListener('show.bs.modal', function(event) {
+          var button = event.relatedTarget;
+          var missionId = button.getAttribute('data-mission-id');
+          document.getElementById('refuseMissionId').value = missionId;
+        });
+      }
+    });
   </script>
 </body>
 </html>

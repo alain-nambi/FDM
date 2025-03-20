@@ -79,6 +79,13 @@ class Mission(models.Model):
         verbose_name='Status',
         help_text='Statut de la mission'
     )
+    
+    refusal_reason = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Refusal Reason',
+        help_text='Motif de refus de la mission'
+    )
 
    
     #depenses 

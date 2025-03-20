@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from .models import Mission, Expense, Technician, Worker
 from django.views import View
 from decimal import Decimal
+from django.http import JsonResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
@@ -14,7 +15,8 @@ from django.contrib.auth.models import User
 from datetime import datetime
 import calendar
 import re
-
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 
 #liste des missions
 class MissionListView(View):
@@ -169,7 +171,10 @@ class HistoryView(TemplateView):
     # juste pour lorsqu'on clique sur historique il hérite du style de couleur bleu
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['active_tab'] = 'history'
+        #filtre les missions validées
+        validated_missions = Mission.objects.filter(status='VALIDATED').order_by('-id')
+        context['missions'] = validated_missions
+        context['active_tab'] = 'history' 
         return context
     
     
@@ -231,10 +236,13 @@ class CustomLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-# Ajouter cette classe à votre fichier views.py
+#  classe pour mettre à jour les données entrés par l'utilisateur 
 class EditMissionView(View):
     def post(self, request, mission_id, *args, **kwargs):
         mission = Mission.objects.get(id=mission_id)
+        
+        # Mettre le statut à "NEW"
+        mission.status = 'NEW'
         
         # Récupérer les données du formulaire
         mission_details = request.POST.get('mission_details')
@@ -244,6 +252,7 @@ class EditMissionView(View):
         end_hour = request.POST.get('end_hour')
         location = request.POST.get('location')
         facturation = request.POST.get('facturation') == 'on'
+        
         
         # Mettre à jour la mission
         mission.mission_details = mission_details
@@ -304,3 +313,45 @@ class EditMissionView(View):
             pass
         
         return redirect('missions')
+    
+    
+    
+    
+#pour la validation des missions
+class ValidateMissionView(View):
+    def post(self, request, *args, **kwargs):
+        mission_id = request.POST.get('mission_id')
+        comment = request.POST.get('comment', '')
+        
+        mission = get_object_or_404(Mission, id=mission_id)
+        mission.status = 'VALIDATED'
+        mission.save()
+        
+        messages.success(request, f"La mission a été validée avec succès.")
+        # Redirection vers la page de liste ou de détail
+        return redirect(reverse('missions'))  # Ajustez selon vos URLs
+
+#pour le refus de la mission
+class RefuseMissionView(View):
+    def post(self, request, *args, **kwargs):
+        mission_id = request.POST.get('mission_id')
+        refusal_reason = request.POST.get('refusal_reason', '')
+        
+        if not refusal_reason.strip():
+            messages.error(request, "Veuillez saisir un motif de refus.")
+            return redirect(reverse('missions'))
+        
+        mission = get_object_or_404(Mission, id=mission_id)
+        mission.status = 'REFUSED'
+        mission.refusal_reason = refusal_reason  # Sauvegarde du motif
+        mission.save()
+        
+        messages.success(request, f"La mission a été refusée.")
+        return redirect(reverse('missions'))
+    
+    
+    
+    
+    
+    
+    
