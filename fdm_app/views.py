@@ -18,100 +18,118 @@ import re
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-#liste des missions
-class MissionListView(View):
-    # obtenir la liste nécessaire pour afficher les missions et les techniciens
-    # rechercher les missions
-    def get(self, request, *args, **kwargs):
-        # Récupérer toutes les missions sauf celles avec le statut VALIDATED
-        all_missions = Mission.objects.exclude(status='VALIDATED').order_by('-id')
-        # Filtrer les missions en fonction de la recherche
-        search_query = request.GET.get('search', '')
-        if search_query:
-            mois_fr = {
-                'janvier': 1, 'février': 2, 'mars': 3, 'avril': 4, 'mai': 5, 'juin': 6,
-                'juillet': 7, 'août': 8, 'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12
-            }
-            search_lower = search_query.lower()
-            month_number = None
-            for month_name, month_num in mois_fr.items():
-                if month_name.startswith(search_lower):
-                    month_number = month_num
-                    break
-            # Vérifier si c'est une année
-            is_year = search_query.isdigit() and len(search_query) == 4
-            if month_number and is_year:
-                # Si la recherche contient un mois et une année
-                all_missions = all_missions.filter(
-                    Q(start_date__month=month_number, start_date__year=search_query) |
-                    Q(end_date__month=month_number, end_date__year=search_query)
-                )
-            elif month_number:
-                # Si la recherche est seulement un mois
-                all_missions = all_missions.filter(
-                    Q(start_date__month=month_number) |
-                    Q(end_date__month=month_number)
-                )
-            elif is_year:
-                # Si la recherche est seulement une année
-                all_missions = all_missions.filter(
-                    Q(start_date__year=search_query) |
-                    Q(end_date__year=search_query)
-                )
+
+
+
+
+#barre de recherche reutilisable
+class MissionSearchUtils:
+    @staticmethod
+    def filter_missions(queryset, search_query):
+        mois_fr = {
+            'janvier': 1, 'février': 2, 'mars': 3, 'avril': 4, 'mai': 5, 'juin': 6,
+            'juillet': 7, 'août': 8, 'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12
+        }
+        search_lower = search_query.lower()
+        month_number = None
+        for month_name, month_num in mois_fr.items():
+            if month_name.startswith(search_lower):
+                month_number = month_num
+                break
+
+        is_year = search_query.isdigit() and len(search_query) == 4
+        if month_number and is_year:
+            queryset = queryset.filter(
+                Q(start_date__month=month_number, start_date__year=search_query) |
+                Q(end_date__month=month_number, end_date__year=search_query)
+            )
+        elif month_number:
+            queryset = queryset.filter(
+                Q(start_date__month=month_number) |
+                Q(end_date__month=month_number)
+            )
+        elif is_year:
+            queryset = queryset.filter(
+                Q(start_date__year=search_query) |
+                Q(end_date__year=search_query)
+            )
+        else:
+            search_terms = search_query.split(' ')
+            facturation_search = None
+            if search_query.lower() in ['facturé', 'facture', 'facturée', 'oui', 'yes']:
+                facturation_search = True
+            elif search_query.lower() in ['non facturé', 'non facture', 'non facturée', 'non', 'no']:
+                facturation_search = False
+
+            if facturation_search is not None:
+                queryset = queryset.filter(facturation=facturation_search)
+            elif len(search_terms) == 1:
+                queryset = queryset.filter(
+                    Q(id__icontains=search_query) |
+                    Q(mission_details__icontains=search_query) |
+                    Q(location__icontains=search_query) |
+                    Q(techniciens__first_name__icontains=search_query) |
+                    Q(techniciens__last_name__icontains=search_query)
+                ).distinct()
             else:
-                # Recherche standard
-                search_terms = search_query.split(' ')
-                
-                # Check if search is for billing status
-                facturation_search = None
-                if search_query.lower() in ['facturé', 'facture', 'facturée', 'oui', 'yes']:
-                    facturation_search = True
-                elif search_query.lower() in ['non facturé', 'non facture', 'non facturée', 'non', 'no']:
-                    facturation_search = False
-                
-                if facturation_search is not None:
-                    all_missions = all_missions.filter(facturation=facturation_search)
-                elif len(search_terms) == 1:
-                    all_missions = all_missions.filter(
-                        Q(id__icontains=search_query) |
-                        Q(mission_details__icontains=search_query) |
-                        Q(location__icontains=search_query) |
-                        Q(techniciens__first_name__icontains=search_query) |
-                        Q(techniciens__last_name__icontains=search_query)
-                    ).distinct()
-                else:
-                    all_missions = all_missions.filter(
-                        Q(id__icontains=search_query) |
-                        Q(location__icontains=search_query) |
-                        Q(mission_details__icontains=search_query) |
-                        (
-                            (Q(techniciens__first_name__icontains=search_terms[0]) & Q(techniciens__last_name__icontains=search_terms[1])) |
-                            (Q(techniciens__first_name__icontains=search_terms[1]) & Q(techniciens__last_name__icontains=search_terms[0]))
-                        )
-                    ).distinct()
-        
-        per_page = request.GET.get('per_page', 10)
+                queryset = queryset.filter(
+                    Q(id__icontains=search_query) |
+                    Q(location__icontains=search_query) |
+                    Q(mission_details__icontains=search_query) |
+                    (
+                        (Q(techniciens__first_name__icontains=search_terms[0]) & Q(techniciens__last_name__icontains=search_terms[1])) |
+                        (Q(techniciens__first_name__icontains=search_terms[1]) & Q(techniciens__last_name__icontains=search_terms[0]))
+                    )
+                ).distinct()
+        return queryset
+
+
+#Pagination reutilisable    
+class PaginationUtils:
+    @staticmethod
+    def paginate_queryset(queryset, request, per_page_default=10):
+        """
+        Paginate a queryset based on the request parameters.
+
+        :param queryset: Queryset à paginer
+        :param request: Objet request contenant les paramètres GET
+        :param per_page_default: Nombre d'éléments par page par défaut
+        :return: Un objet paginé
+        """
+        per_page = request.GET.get('per_page', per_page_default)
         try:
             per_page = int(per_page)
         except (ValueError, TypeError):
-            per_page = 10
-            
-        # pagination
-        paginator = Paginator(all_missions, per_page)
+            per_page = per_page_default
+
+        paginator = Paginator(queryset, per_page)
         page = request.GET.get('page', 1)
         try:
-            missions = paginator.page(page)
+            paginated_queryset = paginator.page(page)
         except PageNotAnInteger:
-            missions = paginator.page(1)
+            paginated_queryset = paginator.page(1)
         except EmptyPage:
-            missions = paginator.page(paginator.num_pages)
-            
-        # recupere les techniciens pour le formulaire
+            paginated_queryset = paginator.page(paginator.num_pages)
+
+        return paginated_queryset   
+    
+#liste des missions
+class MissionListView(View):
+    def get(self, request, *args, **kwargs):
+        all_missions = Mission.objects.exclude(status='VALIDATED').order_by('-id')
+        search_query = request.GET.get('search', '')
+        if search_query:
+            all_missions = MissionSearchUtils.filter_missions(all_missions, search_query)
+
+        # Utilisation de PaginationUtils
+        missions = PaginationUtils.paginate_queryset(all_missions, request)
+
+        # Récupère les techniciens pour le formulaire
         technicians = Technician.objects.all()
         context = {
             'missions': missions,
             'technicians': technicians,
-            'active_tab': 'missions'  # pour le style lorsqu'on clique sur historique ou accueil
+            'active_tab': 'missions'  # Pour le style lorsqu'on clique sur historique ou accueil
         }
         return render(request, 'index.html', context)
         
@@ -167,14 +185,20 @@ class MissionListView(View):
 # historiques des missions validés 
 class HistoryView(TemplateView):
     template_name = 'history.html'
-    
-    # juste pour lorsqu'on clique sur historique il hérite du style de couleur bleu
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        #filtre les missions validées
         validated_missions = Mission.objects.filter(status='VALIDATED').order_by('-id')
-        context['missions'] = validated_missions
-        context['active_tab'] = 'history' 
+
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            validated_missions = MissionSearchUtils.filter_missions(validated_missions, search_query)
+
+        # Utilisation de PaginationUtils
+        missions = PaginationUtils.paginate_queryset(validated_missions, self.request)
+
+        context['missions'] = missions
+        context['active_tab'] = 'history'
         return context
     
     
@@ -313,8 +337,6 @@ class EditMissionView(View):
             pass
         
         return redirect('missions')
-    
-    
     
     
 #pour la validation des missions

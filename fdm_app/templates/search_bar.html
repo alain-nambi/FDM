@@ -1,0 +1,22 @@
+
+
+<form method="GET" action="{% url 'missions' %}" class="d-flex me-2">
+   
+    <!-- triage du nombre de mission à afficher -->
+    <select class="form-select form-select-sm me-3" style="width: auto; min-width: 80px;" name="per_page" onchange="this.form.submit()">
+      
+      <option value="10" {% if request.GET.per_page == '10' or not request.GET.per_page %}selected{% endif %}>10</option>
+      <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
+      <option value="30" {% if request.GET.per_page == '30' %}selected{% endif %}>30</option>
+      
+    </select>
+
+   <!--barre de recherche -->
+    <div class="input-group">
+      <input type="text" class="form-control" name="search" placeholder="Rechercher..." 
+             value="{{ request.GET.search|default:'' }}" aria-label="Search">
+      <button class="btn btn-outline-secondary" type="submit">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </form>
