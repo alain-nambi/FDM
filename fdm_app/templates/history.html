@@ -1,100 +1,88 @@
-<!-- History Section -->
-
 {% extends 'base.html' %}
-
 {% block title %}Historique des demandes{% endblock %}
-
 {% block content %}
 <div class="main-content">
- <!-- Navigation Tabs -->
- {% include 'account.html' %}
- <ul class="nav nav-tabs mb-4">
-  <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'missions' %}active{% endif %}" href="{% url 'missions' %}">
-      <i class="fas fa-home me-1"></i> Accueil
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'history' %}">
-      <i class="fas fa-history me-1"></i> Historique
-    </a>
-  </li>
-</ul>
-
-<div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Historique des demandes validées </h5>
+    <!-- Navigation Tabs -->
+    {% include 'account.html' %}
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'missions' %}active{% endif %}" href="{% url 'missions' %}">
+                <i class="fas fa-home me-1"></i> Accueil
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'history' %}">
+                <i class="fas fa-history me-1"></i> Historique
+            </a>
+        </li>
+    </ul>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Historique des demandes validées </h5>
+        </div>
+        <div class="card-body fade-in">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID Mission</th>
+                            <th>Lieu</th>
+                            <th>Technicien</th>
+                            <th>Dates</th>
+                            <th>Total payé</th>
+                            <th>Facturation</th>
+                            <th>Statut final</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for mission in missions %}
+                        <tr>
+                            <td>{{ mission.id }}</td>
+                            <td>{{ mission.location }}</td>
+                            <!--nom des techniciens et prenom-->
+                            <td>
+                            {% for technicien in mission.techniciens.all %}
+                                {{ technicien.first_name }} {{ technicien.last_name }}<br>
+                            {% empty %}
+                                Aucun technicien
+                            {% endfor %}
+                            </td>
+                            <!--date de la mission-->
+                            <td>
+                                {{ mission.start_date|date:"d/m/Y" }} - {{ mission.end_date|date:"d/m/Y" }}
+                            </td>
+                            <!-- depense de la mission -->
+                            <td>
+                            {% for expense in mission.depenses.all %}
+                                {{ expense.total_expenses }} Ar
+                            {% endfor %}
+                            </td>
+                            <!--Facturation-->
+                            {% if mission.facturation %}
+                                <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
+                            {% else %}
+                                <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
+                            {% endif %}
+                            <td><span class="badge badge-closed">Clôturé</span></td>
+                            <td>
+                                <button type="button" class="btn btn-link p-0 border-0" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#detailModal{{ mission.id }}">
+                                    <i class="fas fa-info-circle details" title="Détails"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="card-body fade-in">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>ID Mission</th>
-              <th>Lieu</th>
-              <th>Technicien</th>
-              <th>Dates</th>
-              <th>Total payé</th>
-              <th>Facturation</th>
-              <th>Statut final</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {% for mission in missions %}
-            <tr>
-              <td>{{ mission.id }}</td>
-              <td>{{ mission.location }}</td>
-              <!--nom des techniciens et prenom-->
-              <td>
-                {% for technicien in mission.techniciens.all %}
-                {{ technicien.first_name }} {{ technicien.last_name }}<br>
-                {% empty %}
-                Aucun technicien
-                {% endfor %}
-              </td>
-              <!--date de la mission-->
-              <td> 
-                {{ mission.start_date|date:"d/m/Y" }} - {{ mission.end_date|date:"d/m/Y" }} 
-              </td>
-              <!-- depense de la mission -->
-              <td>
-                {% for expense in mission.depenses.all %}
-                {{ expense.total_expenses }} Ar
-                {% endfor %}
-              </td>
-              <!--Facturation-->
-              {% if mission.facturation %}
-                <td><span class="badge badge-billed" style="background-color:#28a745;">Facturé</span></td>
-                {% else %}
-                <td><span class="badge badge-not-billed" style="background-color:red;">Non facturé</span></td>
-                {% endif %}
-
-
-              <td><span class="badge badge-closed">Clôturé</span></td>
-
-            <td>
-              <i class="fas fa-info-circle details" 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#detailModal{{ mission.id }}" 
-                  title="Détails">
-              </i>
-            </td>
-
-            </tr>
-           {% include 'detail_modal.html' %}
-            {% endfor %}
-            
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    
+    <!-- Place modals outside of the table but still inside the loop -->
+    {% for mission in missions %}
+        {% include 'detail_modal.html' with mission=mission %}
+    {% endfor %}
 </div>
-</div>
-
-
-
-
 {% endblock %}
