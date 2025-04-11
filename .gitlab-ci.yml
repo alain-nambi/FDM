@@ -1,0 +1,171 @@
+stages:
+  - build
+  - test
+  - deploy
+  - manage
+  - reload
+
+build app:
+  stage: build
+  script:
+    - python3 setup.py sdist
+    - scp dist/*.tar.gz django@bpm-dev.malagasy.com:/tmp/
+  environment:
+    name: dev
+  only:
+    - develop
+
+build app prod:
+  stage: build
+  script:
+    - python3 setup.py sdist
+    - scp dist/*.tar.gz django@bpm.malagasy.com:/tmp/
+  environment:
+    name: prod
+  only:
+    - master
+    
+deploy to dev:
+  stage: deploy
+  script:
+    - ssh django@bpm-dev.malagasy.com '/opt/django/bpm/.env/bin/pip install --upgrade --force-reinstall /tmp/frais_mission-*.tar.gz'
+    - ssh django@bpm-dev.malagasy.com 'rm /tmp/frais_mission-*.tar.gz'
+  environment:
+    name: dev
+    url: bpm-dev.malagasy.com
+  only:
+    - develop
+
+deploy to prod:
+  stage: deploy
+  script:
+    - ssh django@bpm.malagasy.com 'sudo pip3 install --upgrade --force-reinstall /tmp/frais_mission-*.tar.gz'
+    - ssh django@bpm.malagasy.com 'rm /tmp/frais_mission-*.tar.gz'
+  environment:
+    name: prod
+  only:
+    - master
+    
+migrate project:
+  stage: manage
+  script:
+    - ssh django@bpm-dev.malagasy.com '/opt/django/bpm/.env/bin/python /opt/django/bpm/manage.py migrate'
+  environment:
+    name: dev
+    url: bpm-dev.malagasy.com
+  only:
+    - develop
+
+migrate project in prod:
+  stage: manage
+  script:
+    - ssh django@bpm.malagasy.com 'python3 /opt/django/bpm/manage.py migrate'
+  environment:
+    name: prod
+  only:
+    - master
+
+collectstatic project:
+  stage: manage
+  script:
+    - ssh django@bpm-dev.malagasy.com '/opt/django/bpm/.env/bin/python /opt/django/bpm/manage.py collectstatic --no-input'
+  environment:
+    name: dev
+  only:
+    - develop
+
+collectstatic project in prod:
+  stage: manage
+  script:
+    - ssh django@bpm.malagasy.com 'python3 /opt/django/bpm/manage.py collectstatic --no-input'
+  environment:
+    name: prod
+  only:
+    - master
+    
+# sync project with ldap:
+#   stage: manage
+#   script:
+#     - ssh django@bpm-dev.malagasy.com '/opt/django/bpm/.env/bin/python /opt/django/bpm/manage.py syncldap'
+#   environment:
+#     name: dev
+#     url: bpm-dev.malagasy.com
+#   only:
+#     - develop
+
+# sync project with ldap prod:
+#   stage: manage
+#   script:
+#     - ssh django@bpm.malagasy.com 'python3 /opt/django/bpm/manage.py syncldap'
+#   environment:
+#     name: prod
+#   only:
+#     - master
+    
+reload project:
+  stage: reload
+  script:
+    - ssh django@bpm-dev.malagasy.com 'sudo systemctl stop django-bpm && sudo systemctl start django-bpm'
+  environment:
+    name: dev
+    url: bpm-dev.malagasy.com
+  only:
+    - develop
+
+reload project prod:
+  stage: reload
+  script:
+    - ssh django@bpm.malagasy.com 'sudo systemctl stop django-bpm && sudo systemctl start django-bpm'
+  environment:
+    name: prod
+  only:
+    - master
+
+# ==== staging ====
+
+build app staging:
+  stage: build
+  script:
+    - ~/.env/bin/python setup.py sdist
+    - scp dist/*.tar.gz django@bpm-clone.malagasy.com:/tmp/
+  environment:
+    name: staging
+  only:
+    - staging
+
+deploy to staging:
+  stage: deploy
+  script:
+    - ssh django@bpm-clone.malagasy.com 'sudo pip3 install --upgrade --force-reinstall /tmp/frais_mission-*.tar.gz'
+  environment:
+    name: staging
+  only:
+    - staging
+
+migrate project in staging:
+  stage: manage
+  script:
+    - ssh django@bpm-clone.malagasy.com 'python3 /opt/django/bpm/manage.py migrate'
+  environment:
+    name: staging
+  only:
+    - staging
+
+collectstatic project in staging:
+  stage: manage
+  script:
+    - ssh django@bpm-clone.malagasy.com 'python3 /opt/django/bpm/manage.py collectstatic --no-input'
+  environment:
+    name: staging
+  only:
+    - staging
+
+reload project staging:
+  stage: reload
+  script:
+    - ssh django@bpm-clone.malagasy.com 'sudo systemctl stop django-bpm && sudo systemctl start django-bpm'
+  environment:
+    name: staging
+  only:
+    - staging
+
