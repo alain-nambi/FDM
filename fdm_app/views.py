@@ -143,12 +143,20 @@ class MissionListView(View):
         technicians = Technician.objects.values('id', 'first_name', 'last_name')
         # Compter les missions avec statut NEW
         new_missions = Mission.objects.filter(status='NEW').count()
+        validated_missions = Mission.objects.filter(status='VALIDATED').count()
+        refused_missions = Mission.objects.filter(status='REFUSED').count()
+        total_missions = Mission.objects.all().count()
         
         context = {
             'missions': missions,
             'technicians': technicians,
             'active_tab': 'missions',  # Pour le style lorsqu'on clique sur historique ou accueil
-            'new_missions': new_missions 
+            'new_missions': new_missions ,
+            'validated_missions': validated_missions,
+            'refused_missions': refused_missions,
+            'total_missions': total_missions,
+
+            
         }
         return render(request, 'index.html', context)
         
