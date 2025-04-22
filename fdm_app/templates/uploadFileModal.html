@@ -1,0 +1,95 @@
+<!-- Modal pour télécharger un fichier -->
+<div class="modal fade" id="uploadFileModal{{ mission.id }}" tabindex="-1" aria-labelledby="uploadFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadFileModalLabel">Ajouter des fichiers à la mission #{{ mission.id }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <form action="" method="post" enctype="multipart/form-data" id="uploadForm{{ mission.id }}">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="fileInput" class="form-label">Sélectionner des fichiers</label>
+            <input class="form-control" type="file" id="fileInput{{ mission.id }}" name="files" multiple>
+          </div>
+          
+          <div class="mb-3">
+            <label for="fileDescription" class="form-label">Description</label>
+            <input type="text" class="form-control" id="fileDescription" name="description" placeholder="Description des fichiers">
+          </div>
+          
+          <!-- Prévisualisation des fichiers sélectionnés -->
+          <div id="filePreview{{ mission.id }}" class="mt-3">
+            <!-- Les fichiers sélectionnés s'afficheront ici -->
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" form="uploadForm{{ mission.id }}" class="btn btn-primary">Télécharger</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script pour gérer la prévisualisation et la suppression des fichiers -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput{{ mission.id }}');
+    const filePreview = document.getElementById('filePreview{{ mission.id }}');
+    
+    fileInput.addEventListener('change', function() {
+      updateFilePreview();
+    });
+    
+    function updateFilePreview() {
+      // Vider la prévisualisation
+      filePreview.innerHTML = '';
+      
+      if (fileInput.files.length > 0) {
+        const fileList = document.createElement('div');
+        fileList.className = 'list-group';
+        
+        Array.from(fileInput.files).forEach((file, index) => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+          
+          const fileName = document.createElement('span');
+          fileName.textContent = file.name;
+          
+          const removeButton = document.createElement('button');
+          removeButton.className = 'btn btn-sm btn-danger';
+          removeButton.innerHTML = '&times;';
+          removeButton.setAttribute('type', 'button');
+          removeButton.setAttribute('data-index', index);
+          removeButton.addEventListener('click', function() {
+            removeFile(this.getAttribute('data-index'));
+          });
+          
+          fileItem.appendChild(fileName);
+          fileItem.appendChild(removeButton);
+          fileList.appendChild(fileItem);
+        });
+        
+        filePreview.appendChild(fileList);
+      }
+    }
+    
+    function removeFile(index) {
+      // Création d'une nouvelle liste de fichiers sans le fichier à supprimer
+      const dt = new DataTransfer();
+      const files = fileInput.files;
+      
+      for (let i = 0; i < files.length; i++) {
+        if (i != index) {
+          dt.items.add(files[i]);
+        }
+      }
+      
+      fileInput.files = dt.files;
+      updateFilePreview();
+    }
+  });
+</script>

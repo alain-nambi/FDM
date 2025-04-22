@@ -103,7 +103,7 @@ body {
   padding-left: 0;
 }
 .btn-toggle-sidebar:hover i {
-  color: red;
+  color: rgb(227, 227, 227);
 }
 
 .card {
@@ -383,3 +383,7 @@ body {
     min-width: 1000px;
   }
 }
+
+
+
+
