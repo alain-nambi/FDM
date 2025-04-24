@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, FormView, TemplateView
 from django.urls import reverse_lazy
-from .models import Mission, Expense, Technician, Worker
+from .models import Mission, Expense, Technician, Worker, MissionFile
 from django.views import View
 from decimal import Decimal
 from django.http import JsonResponse
@@ -289,7 +289,7 @@ class CustomLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-#  classe pour mettre à jour les données entrés par l'utilisateur 
+#  class pour mettre à jour les données entrés par l'utilisateur 
 class EditMissionView(View):
     def post(self, request, mission_id, *args, **kwargs):
         mission = Mission.objects.get(id=mission_id)
@@ -966,7 +966,27 @@ class ExportMissionsDocxView(View):
         return response
     
     
-
-
+    
+    
+#class pour l'enregistrement des fichiers 
+class UploadMissionFileView(View):
+    def post(self, request, mission_id):
+        mission = get_object_or_404(Mission, id=mission_id)
+        files = request.FILES.getlist('files')
+        description = request.POST.get('description', 'Pas de description')
+        
+        if files:
+            for file in files:
+                MissionFile.objects.create(
+                    mission=mission,
+                    file=file,
+                    file_description=description
+                )
+            messages.success(request, f"{len(files)} fichier(s) ajouté(s) à la mission #{mission_id}")
+        else:
+            messages.error(request, "Aucun fichier n'a été sélectionné")
+            
+        # Rediriger vers la page d'où provient la requête
+        return redirect('history')
     
     

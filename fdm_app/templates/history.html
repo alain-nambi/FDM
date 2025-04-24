@@ -99,12 +99,14 @@
                               <i class="fas fa-info-circle details"
                                  data-bs-toggle="modal"
                                  data-bs-target="#detailModal{{ mission.id }}"
-                                 title="Détails"></i>
-                              <!-- icon pour l'edit -->
+                                 title="Détails">
+                                </i>
+                              <!-- icon pour l'ajout de fichier -->
                               <i class="fas fa-file-upload"
                                   data-bs-toggle="modal"
                                   data-bs-target="#uploadFileModal{{ mission.id }}"
-                                  title="Ajouter un fichier"></i>
+                                  title="Ajouter un fichier">
+                              </i>
                               </td>
 
                           </td>
@@ -171,7 +173,7 @@
             <!-- Modal pour afficher les détails de la mission -->
         {% include 'detail_modal.html' with mission=mission %}
         <!-- Modal pour envoyer un fichier -->
-        {% include 'uploadFileModal.html' %}
+        {% include 'uploadFileModal.html' with mission=mission %}
     {% endfor %}
 
 </div>

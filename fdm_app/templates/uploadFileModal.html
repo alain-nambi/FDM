@@ -7,7 +7,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <div class="modal-body">
-        <form action="" method="post" enctype="multipart/form-data" id="uploadForm{{ mission.id }}">
+        <form action="{% url 'upload_mission_file' mission.id %}" method="post" enctype="multipart/form-data" id="uploadForm{{ mission.id }}">
           {% csrf_token %}
           
           <div class="mb-3">
@@ -93,3 +93,4 @@
     }
   });
 </script>
+

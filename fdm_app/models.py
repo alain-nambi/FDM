@@ -108,6 +108,9 @@ class Mission(models.Model):
         help_text='Date et heure de refus de la mission'
     )
     
+    
+    
+    
     # Méthode pour mettre à jour automatiquement les dates de validation/refus
     def save(self, *args, **kwargs):
         # Si c'est un nouvel objet (pas encore en base)
@@ -136,11 +139,30 @@ class Mission(models.Model):
         permissions = [
             ("can_validate_mission","Peut valider une mission"),
             ("can_refuse_mission","Peut refuser une mission"),
+
             ]
-    
+        
+#fichier du mission
+class MissionFile(models.Model):
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(
+        upload_to='mission_files/%Y/%m/%d/',
+        verbose_name='Fichier'
+    )
+    file_description = models.CharField(
+        max_length=100,
+        help_text='description du fichier',
+        verbose_name='File Description',
+        default='Pas de description du fichier'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Fichier pour mission #{self.mission.id}: {self.file_description}" 
+
 
    
-    #depenses 
+ #depenses 
 class Expense(models.Model):
     
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE, related_name="depenses")

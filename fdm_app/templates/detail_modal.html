@@ -120,7 +120,32 @@
           </div>
         </div>
         {% endfor %}
-        
+
+        <!-- Section d'affichage des fichiers -->
+          <div class="mt-4">
+            <h6 class="mb-3">Fichiers associés</h6>
+            {% if mission.files.all %}
+              <ul class="list-group">
+                {% for file in mission.files.all %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <span>{{ file.file.name|slice:"21:" }}</span>
+                      <small class="text-muted d-block">{{ file.file_description }}</small>
+                    </div>
+                    <div>
+                      <small class="text-muted me-3">{{ file.uploaded_at|date:"d/m/Y H:i" }}</small>
+                      <a href="{{ file.file.url }}" class="btn btn-sm btn-primary" download>
+                        <i class="fas fa-download me-1"></i> Télécharger
+                      </a>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">Aucun fichier associé à cette mission.</p>
+            {% endif %}
+          </div>
+                  
         <!--historique des actions dans le details-->
         <h6 class="mt-4 mb-3">
           <b><font size="4" color="#4558c9">Historique des actions</font></b>
@@ -215,13 +240,31 @@
           </div>
         </div>
       </div>
+      
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        <a href="{% url 'download_pdf' mission.id %}" class="btn btn-primary">Télécharger PDF </a>
+        <!-- telecharger pdf -->
+        <a href="{% url 'download_pdf' mission.id %}" class="btn btn-outline-danger me-2 mb-2">
+          <i class="fas fa-file-pdf mr-1"></i> PDF
+        </a> 
+        <!--excel -->
+        <a href="{% url 'export_excel' %}" class="btn btn-outline-primary me-2 mb-2">
+          <i class="fas fa-file-excel mr-1"></i> Excel
+        </a> 
+        <!--word -->
+        <a href="{% url 'export_docx' %}" class="btn btn-outline-info me-2 mb-2">
+          <i class="fas fa-file-word mr-1"></i> Word
+        </a>
+        <!--csv -->
+        <a href="{% url 'export_csv' %}" class="btn btn-outline-success me-2 mb-2">
+          <i class="fas fa-file-csv mr-1"></i> CSV
+        </a>
+
       </div>
     </div>
   </div>
 </div>
+
 {% endfor %}
 
 <style>
