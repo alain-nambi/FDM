@@ -25,7 +25,7 @@ class Technician(models.Model):
     )
     
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return "{} {}".format(self.first_name, self.last_name)
     
 #mission 
 class Mission(models.Model):
@@ -158,7 +158,7 @@ class MissionFile(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Fichier pour mission #{self.mission.id}: {self.file_description}" 
+        return "Fichier pour mission #{}: {}".format(self.mission.id, self.file_description) 
 
 
    
@@ -248,7 +248,7 @@ class Expense(models.Model):
     
     
     def __str__(self):
-        return f"{self.total_expenses}"
+        return "{}".format(self.total_expenses)
         
    
     
