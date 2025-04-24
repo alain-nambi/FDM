@@ -30,6 +30,15 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+# Configuration pour les fichiers média
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Créer un sous-dossier pour les fichiers des missions
+MISSION_FILES_DIR = 'mission_files'
+
+
+
 # Application definition
 
 INSTALLED_APPS = [

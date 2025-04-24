@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, FormView, TemplateView
 from django.urls import reverse_lazy
-from .models import Mission, Expense, Technician, Worker
+from .models import Mission, Expense, Technician, Worker, MissionFile
 from django.views import View
 from decimal import Decimal
 from django.http import JsonResponse
@@ -143,12 +143,20 @@ class MissionListView(View):
         technicians = Technician.objects.values('id', 'first_name', 'last_name')
         # Compter les missions avec statut NEW
         new_missions = Mission.objects.filter(status='NEW').count()
+        validated_missions = Mission.objects.filter(status='VALIDATED').count()
+        refused_missions = Mission.objects.filter(status='REFUSED').count()
+        total_missions = Mission.objects.all().count()
         
         context = {
             'missions': missions,
             'technicians': technicians,
             'active_tab': 'missions',  # Pour le style lorsqu'on clique sur historique ou accueil
-            'new_missions': new_missions 
+            'new_missions': new_missions ,
+            'validated_missions': validated_missions,
+            'refused_missions': refused_missions,
+            'total_missions': total_missions,
+
+            
         }
         return render(request, 'index.html', context)
         
@@ -281,7 +289,7 @@ class CustomLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-#  classe pour mettre à jour les données entrés par l'utilisateur 
+#  class pour mettre à jour les données entrés par l'utilisateur 
 class EditMissionView(View):
     def post(self, request, mission_id, *args, **kwargs):
         mission = Mission.objects.get(id=mission_id)
@@ -384,8 +392,8 @@ class ValidateMissionView(View):
         # Adresse(s) email spécifiée(s) pour recevoir les notifications
         notification_email = 'mihajarazafimahazoson@gmail.com.com'  # Remplacez par l'adresse souhaitée
         
-        subject = f"Demande de validation du {today}"
-        message = f"La demande de mission {mission_id} du {today} a été validée par le DG."
+        subject = "Demande de validation du {}".format(today)
+        message = "La demande de mission {} du {} a été validée par le DG.".format(mission_id, today)
         
         send_mail(
             subject,
@@ -395,7 +403,7 @@ class ValidateMissionView(View):
             fail_silently=True,
         )
         
-        messages.success(request, f"La mission a été validée avec succès.")
+        messages.success(request, "La mission a été validée avec succès.")
         return redirect(reverse('missions'))
 
 # Pour le refus de la mission
@@ -425,9 +433,8 @@ class RefuseMissionView(View):
         # Adresse(s) email spécifiée(s) pour recevoir les notifications
         notification_email = 'mihajarazafimahazoson@gmail.com'  # Remplacez par l'adresse souhaitée
         
-        subject = f"Demande de validation du {today}"
-        message = f"La demande de mission {mission_id} du {today} a été refusée par le DG.\n\nMotif du refus : {refusal_reason}"
-        
+        subject = "Demande de validation du {}".format(today)
+        message = "La demande de mission {} du {} a été refusée par le DG.\n\nMotif du refus : {}".format(mission_id, today, refusal_reason)
         send_mail(
             subject,
             message,
@@ -436,7 +443,7 @@ class RefuseMissionView(View):
             fail_silently=True,
         )
         
-        messages.success(request, f"La mission a été refusée.")
+        messages.success(request, "La mission a été refusée.")
         return redirect(reverse('missions'))
     
   
@@ -468,7 +475,9 @@ class GeneratePDFView(View):
             
         # Retourner le fichier PDF en tant que réponse HTTP
         response = HttpResponse(pdf_content, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="mission_{mission.id}.pdf"'
+        # response['Content-Disposition'] = f'attachment; filename="mission_{mission.id}.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="mission_{}.pdf"'.format(mission.id)
+        
         
         return response
     
@@ -562,7 +571,7 @@ class ExportMissionsExcelView(View):
             total_expenses = sum(expense.total_expenses for expense in mission.depenses.all())
             
             # Obtenir la liste des techniciens
-            tech_list = ', '.join([f"{tech.first_name} {tech.last_name}" for tech in mission.techniciens.all()])
+            tech_list = ', '.join(["{} {}".format(tech.first_name, tech.last_name) for tech in mission.techniciens.all()])
             
             # Mapper les statuts
             status_mapping = {
@@ -581,7 +590,7 @@ class ExportMissionsExcelView(View):
                 mission.start_date.strftime('%d/%m/%Y'),
                 mission.end_date.strftime('%d/%m/%Y'),
                 status_display,
-                f"{total_expenses:.2f} "
+                "{:.2f}".format(total_expenses)
             ]
             
             for col_num, cell_value in enumerate(row, 1):
@@ -626,7 +635,7 @@ class ExportMissionsExcelView(View):
         # Ajouter les données des dépenses
         row_num = 2
         for mission in missions:
-            tech_list = ', '.join([f"{tech.first_name} {tech.last_name}" for tech in mission.techniciens.all()])
+            tech_list = ', '.join(["{} {}".format(tech.first_name, tech.last_name) for tech in mission.techniciens.all()])
             
             for expense in mission.depenses.all():
                 row = [
@@ -634,15 +643,15 @@ class ExportMissionsExcelView(View):
                     mission.mission_details[:50],
                     tech_list,
                     expense.hosting_days,
-                    f"{expense.overnight_rate:.2f} ",
-                    f"{expense.total_hosting:.2f} ",
-                    f"{expense.meal_costs:.2f} ",
-                    f"{expense.total_meal_costs:.2f} ",
+                    "{:.2f} ".format(expense.overnight_rate),
+                    "{:.2f} ".format(expense.total_hosting),
+                    "{:.2f} ".format(expense.meal_costs),
+                    "{:.2f} ".format(expense.total_meal_costs),
                     expense.transport,
-                    f"{expense.shipping_costs:.2f} ",
+                    "{:.2f} ".format(expense.shipping_costs),
                     expense.various_expenses_details,
-                    f"{expense.various_expenses_price:.2f} ",
-                    f"{expense.total_expenses:.2f} "
+                    "{:.2f} ".format(expense.various_expenses_price),
+                    "{:.2f} ".format(expense.total_expenses)
                 ]
                 
                 for col_num, cell_value in enumerate(row, 1):
@@ -664,7 +673,7 @@ class ExportMissionsExcelView(View):
         ws_summary.cell(row=1, column=1).font = title_font
         
         # Date de génération
-        ws_summary.cell(row=2, column=1).value = f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}"
+        ws_summary.cell(row=2, column=1).value = "Généré le {}".format(datetime.now().strftime('%d/%m/%Y à %H:%M'))
         
         # Compteurs
         validated_count = missions.filter(status='VALIDATED').count()
@@ -695,7 +704,7 @@ class ExportMissionsExcelView(View):
         ws_summary.cell(row=stats_row+4, column=2).value = refused_count
         
         ws_summary.cell(row=stats_row+5, column=1).value = "Total des dépenses:"
-        ws_summary.cell(row=stats_row+5, column=2).value = f"{total_expenses:.2f} "
+        ws_summary.cell(row=stats_row+5, column=2).value = "{:.2f} ".format(total_expenses)
         
         # Ajuster la largeur des colonnes
         for col in range(1, 3):
@@ -745,7 +754,7 @@ class ExportMissionsCSVView(View):
             total_expenses = sum(expense.total_expenses for expense in mission.depenses.all())
             
             # Obtenir la liste des techniciens formatée
-            tech_list = ', '.join([f"{tech.first_name} {tech.last_name}" for tech in mission.techniciens.all()])
+            tech_list = ', '.join(["{} {}".format(tech.first_name, tech.last_name) for tech in mission.techniciens.all()])
             
             # Convertir les dates en format lisible
             start_date = mission.start_date.strftime('%d/%m/%Y')
@@ -763,12 +772,12 @@ class ExportMissionsCSVView(View):
                 start_date,
                 end_date,
                 status_display,
-                f"{total_expenses:.2f}"
+                "{:.2f}".format(total_expenses)
             ])
         
         # Préparer la réponse HTTP
         response = HttpResponse(buffer.getvalue(), content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename=missions_export_{datetime.now().strftime("%Y%m%d")}.csv'
+        response['Content-Disposition'] = 'attachment; filename=missions_export_{}.csv'.format(datetime.now().strftime("%Y%m%d"))
         
         return response
 
@@ -792,7 +801,7 @@ class ExportMissionsDocxView(View):
         # Ajouter la date de génération
         date_paragraph = doc.add_paragraph()
         date_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        date_paragraph.add_run(f'Généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}')
+        date_paragraph.add_run('Généré le {}'.format(datetime.now().strftime("%d/%m/%Y à %H:%M")))
         
         # Ajouter un résumé
         doc.add_heading('Résumé', level=1)
@@ -820,7 +829,7 @@ class ExportMissionsDocxView(View):
             ('Missions validées:', str(validated_count)),
             ('Nouvelles missions:', str(new_count)),
             ('Missions refusées:', str(refused_count)),
-            ('Total des dépenses:', f"{total_expenses:.2f} Ar")
+            ('Total des dépenses:', "{:.2f} Ar".format(total_expenses))
         ]
         
         for i, (label, value) in enumerate(summary_rows):
@@ -847,7 +856,7 @@ class ExportMissionsDocxView(View):
         # Parcourir chaque mission
         for mission in missions:
             # Titre de la mission
-            mission_title = doc.add_heading(f'Mission #{mission.id}', level=2)
+            mission_title = doc.add_heading('Mission #{}'.format(mission.id), level=2)
             
             # Ajouter les détails dans un tableau
             details_table = doc.add_table(rows=6, cols=2)
@@ -858,7 +867,7 @@ class ExportMissionsDocxView(View):
             end_date = mission.end_date.strftime('%d/%m/%Y')
             
             # Obtenir la liste des techniciens
-            tech_list = ', '.join([f"{tech.first_name} {tech.last_name}" for tech in mission.techniciens.all()])
+            tech_list = ', '.join(["{} {}".format(tech.first_name, tech.last_name) for tech in mission.techniciens.all()])
             
             # Total des dépenses
             total_mission_expenses = sum(expense.total_expenses for expense in mission.depenses.all())
@@ -918,12 +927,12 @@ class ExportMissionsDocxView(View):
                 # Ajouter chaque dépense
                 for expense in expenses:
                     row_cells = expense_table.add_row().cells
-                    row_cells[0].text = f"{expense.hosting_days} jours × {expense.overnight_rate:.2f} Ar"
-                    row_cells[1].text = f"{expense.total_hosting:.2f} Ar"
-                    row_cells[2].text = f"{expense.total_meal_costs:.2f} Ar"
-                    row_cells[3].text = f"{expense.shipping_costs:.2f} Ar ({expense.transport})"
-                    row_cells[4].text = f"{expense.various_expenses_price:.2f} Ar"
-                    row_cells[5].text = f"{expense.total_expenses:.2f} Ar"
+                    row_cells[0].text = "{} jours × {:.2f} Ar".format(expense.hosting_days, expense.overnight_rate)
+                    row_cells[1].text = "{:.2f} Ar".format(expense.total_hosting)
+                    row_cells[2].text = "{:.2f} Ar".format(expense.total_meal_costs)
+                    row_cells[3].text = "{:.2f} Ar ({})".format(expense.shipping_costs, expense.transport)
+                    row_cells[4].text = "{:.2f} Ar".format(expense.various_expenses_price)
+                    row_cells[5].text = "{:.2f} Ar".format(expense.total_expenses)
                     
                     # Centrer les cellules
                     for cell in row_cells:
@@ -935,7 +944,7 @@ class ExportMissionsDocxView(View):
                 row_cells[4].paragraphs[0].runs[0].bold = True
                 row_cells[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 
-                row_cells[5].text = f"{total_mission_expenses:.2f} Ar"
+                row_cells[5].text = "{:.2f} Ar".format(total_mission_expenses)
                 row_cells[5].paragraphs[0].runs[0].bold = True
                 row_cells[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
             
@@ -958,7 +967,27 @@ class ExportMissionsDocxView(View):
         return response
     
     
-
-
+    
+    
+#class pour l'enregistrement des fichiers 
+class UploadMissionFileView(View):
+    def post(self, request, mission_id):
+        mission = get_object_or_404(Mission, id=mission_id)
+        files = request.FILES.getlist('files')
+        description = request.POST.get('description', 'Pas de description')
+        
+        if files:
+            for file in files:
+                MissionFile.objects.create(
+                    mission=mission,
+                    file=file,
+                    file_description=description
+                )
+            messages.success(request, "{} fichier(s) ajouté(s) à la mission #{}".format(len(files), mission_id))
+        else:
+            messages.error(request, "Aucun fichier n'a été sélectionné")
+            
+        # Rediriger vers la page d'où provient la requête
+        return redirect('history')
     
     

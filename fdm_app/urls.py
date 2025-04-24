@@ -1,6 +1,9 @@
 from django.urls import path
 from .views import MissionListView, HistoryView, RegisterView , CustomLoginView ,CustomLogoutView,EditMissionView,GeneratePDFView,ExportMissionsPDFView,ExportMissionsExcelView,ExportMissionsCSVView,ExportMissionsDocxView
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('', MissionListView.as_view(), name='missions'),
     path('history/',HistoryView.as_view(),name='history'),
@@ -15,4 +18,9 @@ urlpatterns = [
     path('export/excel/', views.ExportMissionsExcelView.as_view(), name='export_excel'),
     path('export/csv/', views.ExportMissionsCSVView.as_view(), name='export_csv'),
     path('export/docx/', views.ExportMissionsDocxView.as_view(), name='export_docx'),
+    path('mission/<int:mission_id>/upload-file/', views.UploadMissionFileView.as_view(), name='upload_mission_file'),
+    
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
