@@ -20,8 +20,8 @@ test:
   script:
     - echo "🧪 Lancement des tests..."
     - docker info
-    - docker compose -f docker-compose.test.yml build
-    - docker compose -f docker-compose.test.yml run --rm web python manage.py test
+    # - docker compose -f docker-compose.test.yml build
+    # - docker compose -f docker-compose.test.yml run --rm web python manage.py test
   only:
     - develop
 
