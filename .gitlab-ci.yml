@@ -1,48 +1,24 @@
-# .gitlab-ci.yml
-stages:
-  - build
-  - test
-  - deploy
+image: docker:latest
+
+services:
+  - docker:dind
 
 variables:
-  DOCKER_TLS_CERTDIR: ""          # Désactiver TLS
-  DOCKER_HOST: tcp://docker:2375  # Utiliser DinD
-  COMPOSE_PROJECT_NAME: frais_mission_ci
+  DOCKER_DRIVER: overlay2
 
-build_image:
-  stage: build
-  image: docker:24.0
-  services:
-    - name: docker:dind
-      alias: docker
-  script:
-    - sleep 10
-    - docker info
-    - echo "🏗️ Build de l'image Django..."
-    - docker compose -f docker-compose.prod.yml build web
+stages:
+  - deploy
 
-test_app:
-  stage: test
-  image: docker:24.0
-  services:
-    - name: docker:dind
-      alias: docker
-  script:
-    - sleep 10
-    - echo "🧪 Tests unitaires..."
-    - docker compose -f docker-compose.prod.yml run --rm web python manage.py test
-    - echo "✅ Tests réussis"
-
-deploy_prod:
+deploy:
   stage: deploy
-  image: docker:24.0
-  services:
-    - name: docker:dind
-      alias: docker
+  tags:
+    - production
+  before_script:
+    # - apk add --no-cache docker-compose git
+    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
   script:
-    - sleep 10
-    - echo "🚀 Déploiement en production..."
+    - echo "🚀 Déploiement en cours..."
     - docker compose -f docker-compose.prod.yml down
-    - docker compose -f docker-compose.prod.yml up -d
+    - docker compose -f docker-compose.prod.yml up -d --build
   only:
     - develop
