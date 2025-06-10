@@ -1,0 +1,24 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - production
+  before_script:
+    - apk add --no-cache docker-compose git
+    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
+  script:
+    - echo "🚀 Déploiement en cours..."
+    - docker-compose -f docker-compose.prod.yml down
+    - docker-compose -f docker-compose.prod.yml up -d --build
+  only:
+    - develop
