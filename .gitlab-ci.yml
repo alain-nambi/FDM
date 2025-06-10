@@ -4,14 +4,13 @@ deploy:
   tags:
     - production
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--tls=false"]
   variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   before_script:
-    - until docker info; do sleep 1; done
+    - until docker info; do echo "Waiting for Docker..."; sleep 5; done
   script:
     - echo "🚀 Déploiement en cours..."
     - docker compose -f docker-compose.prod.yml down
