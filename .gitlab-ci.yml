@@ -1,27 +1,47 @@
-image: docker:latest
-
-services:
-  - docker:dind
-
-variables:
-  DOCKER_DRIVER: overlay2
-
+# .gitlab-ci.yml
 stages:
+  - build
+  - test
   - deploy
 
-deploy:
+variables:
+  DOCKER_TLS_CERTDIR: ""  # Désactiver TLS pour simplifier
+  COMPOSE_PROJECT_NAME: frais_mission_ci
+
+# Étape de build de l'image Docker
+build_image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind  # Utilise Docker-in-Docker
+  script:
+    - sleep 10  # Attendre que Docker démarre
+    - docker info
+    - echo "🏗️ Build de l'image Django..."
+    - docker compose -f docker-compose.prod.yml build web
+
+# Étape de test de l'application
+test_app:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - sleep 10
+    - echo "🧪 Tests unitaires..."
+    - docker compose -f docker-compose.prod.yml run --rm web python manage.py test
+    - echo "✅ Tests réussis"
+
+# Étape de déploiement en production
+deploy_prod:
   stage: deploy
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  before_script:
-    - until docker info; do sleep 1; done  # Wait for docker to be ready
   script:
-    - echo "🚀 Déploiement en cours..."
+    - sleep 10
+    - echo "🚀 Déploiement en production..."
     - docker compose -f docker-compose.prod.yml down
     - docker compose -f docker-compose.prod.yml up -d
+  only:
+    - develop
