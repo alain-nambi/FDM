@@ -7,22 +7,35 @@ variables:
   DOCKER_DRIVER: overlay2
 
 stages:
+  - test
   - deploy
+
+test:
+  stage: test
+  tags:
+    - production
+  script:
+    - echo "🧪 Lancement des tests..."
+    # - docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+  only:
+    - develop
+
 
 deploy:
   stage: deploy
-  image: docker:latest
   tags:
     - production
-  services:
-    - name: docker:dind
-      command: ["--tls=false"]
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
   before_script:
-    - until docker info; do echo "Waiting for Docker..."; sleep 5; done
+    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
+    - python3 -m venv /tmp/venv
+    - source /tmp/venv/bin/activate
+    - pip install docker-compose
+    - until docker info; do sleep 1; done
   script:
     - echo "🚀 Déploiement en cours..."
-    - docker compose -f docker-compose.prod.yml down
-    - docker compose -f docker-compose.prod.yml up -d
+    - sudo apt-get install -y python-pip
+    - pip install docker-compose
+    - docker-compose -f docker-compose.prod.yml down
+    - docker-compose -f docker-compose.prod.yml up -d --build
+  only:
+    - develop
