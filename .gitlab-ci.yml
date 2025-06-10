@@ -1,4 +1,4 @@
-image: docker:latest
+image: docker:24.0
 
 services:
   - name: docker:dind
@@ -6,8 +6,8 @@ services:
     command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
 
 variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375    # Connect to DinD service
+  DOCKER_TLS_CERTDIR: ""            # Disable TLS for simplicity
   DOCKER_DRIVER: overlay2
 
 stages:
@@ -18,10 +18,13 @@ deploy:
   tags:
     - production
   before_script:
-    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
+    # Verify Docker connectivity
+    - docker version
+    - docker info
   script:
     - echo "🚀 Déploiement en cours..."
-    - docker compose -f docker-compose.prod.yml down
+    # Run compose commands
+    - docker compose -f docker-compose.prod.yml down || true
     - docker compose -f docker-compose.prod.yml up -d --build
   only:
     - develop
