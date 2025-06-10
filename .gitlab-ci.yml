@@ -13,7 +13,7 @@ stages:
 test:
   stage: test
   tags:
-    - test
+    - production
   script:
     - echo "🧪 Lancement des tests..."
     # - docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
