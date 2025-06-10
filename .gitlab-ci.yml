@@ -1,42 +1,16 @@
-image: docker:latest
-
-services:
-  - name: docker:dind
-    alias: docker
-
-variables:
-  DOCKER_TLS_CERTDIR: ""          # Désactiver TLS
-  DOCKER_HOST: tcp://docker:2375  # Utiliser DinD
-  DOCKER_DRIVER: overlay2
-
-stages:
-  - test
-  - deploy
-
-test:
-  stage: test
-  tags:
-    - production
-  script:
-    - echo "🧪 Lancement des tests..."
-    - docker info
-    # - docker compose -f docker-compose.test.yml build
-    # - docker compose -f docker-compose.test.yml run --rm web python manage.py test
-  only:
-    - develop
-
 deploy:
   stage: deploy
-  tags:
-    - production
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   before_script:
-    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
-    - docker info
+    - until docker info; do sleep 1; done
   script:
     - echo "🚀 Déploiement en cours..."
-    - apk add --no-cache py3-pip  # Installer pip dans Alpine
-    - pip install docker-compose   # Installer docker-compose via pip
-    - docker compose -f docker-compose.prod.yml down || true
-    - docker compose -f docker-compose.prod.yml up -d --build
-  only:
-    - develop
+    - docker compose -f docker-compose.prod.yml down
+    - docker compose -f docker-compose.prod.yml up -d
