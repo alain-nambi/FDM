@@ -1,4 +1,6 @@
-__pycache__
 .venv
+staticfiles
+__pycache__
+templates_c
 *.pyc
-*.pyo
+media

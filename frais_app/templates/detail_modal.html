@@ -1,0 +1,330 @@
+<!-- Detail de la mission modal -->
+{% for mission in missions %}
+<div class="modal fade detail-modal" id="detailModal{{ mission.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Détails de la mission - {{ mission.id }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <b><font size="4" color="#4558c9"> Lien bluedesk </font></b>
+            <p>{{ mission.bluedesk_link }}</p>
+            <!-- technicien de la mission -->
+            <b><font size="4" color="#4558c9"> Techniciens </font></b>
+            <p> {% for technicien in mission.techniciens.all %}
+              {{ technicien.first_name }} {{ technicien.last_name }}<br>
+            {% empty %}
+              Aucun technicien
+            {% endfor %}
+            </p>
+            
+            <b><font size="4" color="#4558c9"> Lieu de la mission </font></b>
+            <p>{{ mission.location }}</p>
+
+            <b><font size="4" color="#4558c9"> Dates </font></b>
+            <p>{{ mission.start_date|date:"d F Y" }} à {{ mission.start_hour|time:"H:i" }} - {{ mission.end_date|date:"d F Y" }} à {{ mission.end_hour|time:"H:i" }}</p>
+          </div>
+          <div class="col-md-6">
+            <b><font size="4" color="#4558c9"> Status </font></b>
+            
+            <p>{% if mission.status == "NEW" %}
+              <span class="badge badge-new" style="background-color:#4688A3">nouveau</span>
+            {% elif mission.status == "REFUSED" %}
+              <span class="badge badge-refused" style="background-color: #EF5350;">refusée </span>
+            {% elif mission.status == "VALIDATED" %}
+              <span class="badge badge-validated" style="background-color: #4CAF50;">validée </span>
+            {% elif mission.status == "CLOSED" %}
+              <span class="badge badge-closed" style="background-color: #6c757d;">clôturée</span>  
+            {% endif %}</p>
+            
+            <b><font size="4" color="#4558c9"> Facturation </font></b>
+            <Br>
+            
+            {% if mission.facturation %}
+              <td><span class="badge badge-billed" style="background-color: #4CAF50;">Facturé</span></td>
+              {% else %}
+              <td><span class="badge badge-not-billed" style="background-color: #EF5350;">Non facturé</span></td>
+              {% endif %}
+            
+              <h6 class="mt-4 mb-3">
+                <b><font size="4" color="#4558c9">Total à payer</font></b>
+              </h6>
+            {% for expense in mission.depenses.all %}
+            <p class="fw-bold">{{ expense.total_expenses }} Ar</p>
+            
+          </div>
+        </div>
+        
+        <h5 class="mb-3">Détails des frais</h5>
+        
+        <div class="detail-sections">
+          <div class="detail-section">
+            <h5>Hébergement</h5>
+            <div class="row">
+              <div class="col-md-4">
+                <p class="mb-1">Nombre de jours</p>
+                <h6>{{ expense.hosting_days }}</h6>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1">Tarif nuitée</p>
+                <h6>{{ expense.overnight_rate }} Ar</h6>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1">Total hébergement</p>
+                <h6>{{ expense.total_hosting }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Repas</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Budget repas/jour</p>
+                <h6>{{ expense.meal_costs }}Ar</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Total repas </p>
+                <h6>{{ expense.total_meal_costs }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Transport</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Moyen de transport</p>
+                <h6>{{ expense.transport }}</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Coût du transport</p>
+                <h6>{{ expense.shipping_costs }} Ar</h6>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h5>Frais divers</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1">Description</p>
+                <h6>{{expense.various_expenses_details}}</h6>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">Montant</p>
+                <h6>{{ expense.various_expenses_price }} Ar</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Section d'affichage des fichiers -->
+          <div class="mt-4">
+            <h6 class="mb-3">Fiche rapport d'intervention</h6>
+            {% if mission.files.all %}
+              <ul class="list-group">
+                {% for file in mission.files.all %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <span>{{ file.file.name|slice:"21:" }}</span>
+                      <small class="text-muted d-block">{{ file.file_description }}</small>
+                      <small class="text-muted d-block">
+                        Ajouté par :
+                        {% if file.uploaded_by %}
+                          {{ file.uploaded_by.get_full_name|default:file.uploaded_by.username }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </small>
+                    </div>
+                    <div>
+                      <small class="text-muted me-3">{{ file.uploaded_at|date:"d/m/Y H:i" }}</small>
+                      <a href="{{ file.file.url }}" class="btn btn-sm btn-primary" download>
+                        <i class="fas fa-download me-1"></i> Télécharger
+                      </a>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">Aucun fichier associé à cette mission.</p>
+            {% endif %}
+          </div>
+                  
+        <!--historique des actions dans le details-->
+        <h6 class="mt-4 mb-3">
+          <b><font size="4" color="#4558c9">Historique des actions</font></b>
+        </h6>
+        
+        <!-- Timeline style pour l'historique -->
+        <div class="timeline-container">
+
+          <!-- Première étape - Demande créée -->
+          <div class="timeline-step">
+            <div class="timeline-content">
+              <div class="timeline-icon">
+                <span class="circle-icon">+</span>
+              </div>
+              <!-- date de création  -->
+              <div class="timeline-text">
+                <div>
+                  <span class="text-muted small">{{mission.created_at|date:"d/m/Y H:i"}}</span>
+                  <p class="mb-0">Demande créée par : {{ mission.created_by.get_full_name }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-line"></div>
+          </div>
+          
+          <!-- Nouvelle étape - Dernière modification -->
+          {% if mission.updated_by and mission.updated_at|date:"Y-m-d H:i" != mission.created_at|date:"Y-m-d H:i" %}
+          <div class="timeline-step">
+            <div class="timeline-content">
+              <div class="timeline-icon">
+                <span class="circle-icon" style="background-color: #fd7e14;"><i class="fas fa-pen"></i></span>
+              </div>
+              <div class="timeline-text">
+                <div>
+                  <span class="text-muted small">{{mission.updated_at|date:"d/m/Y H:i"}}</span>
+                  <p class="mb-0">Modifiée par : {{ mission.updated_by.get_full_name }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-line"></div>
+          </div>
+          {% endif %}
+          
+          <!-- Étape de Validation/Refus -->
+          <div class="timeline-step">
+            <div class="timeline-content">
+              <div class="timeline-icon">
+                <span class="circle-icon"
+                style="background-color: {% if mission.status == 'VALIDATED' %}#28a745{% elif mission.status == 'REFUSED' %}#dc3545{% elif mission.status == 'NEW' %}#4688A3{% elif mission.status == 'CLOSED' %}#6c757d{% else %}#0D6EFD{% endif %};">
+                {% if mission.status == 'REFUSED' %}✗{% elif mission.status == 'VALIDATED' %}✓{% elif mission.status == 'CLOSED' %}✓{% else %}?{% endif %}
+                </span>
+              </div>
+              <div class="timeline-text">
+                <div>
+                  <!-- Afficher la date en fonction du statut -->
+                  <span class="text-muted small">
+                    {% if mission.status == 'VALIDATED' %}
+                      {{ mission.validated_at|date:"d/m/Y H:i" }}
+                    {% elif mission.status == 'REFUSED' %}
+                      {{ mission.refused_at|date:"d/m/Y H:i" }}
+                    {% elif mission.status == 'CLOSED' %}
+                      {{ mission.closed_at|date:"d/m/Y H:i" }}
+                    {% else %}
+                      <!-- Vous pouvez laisser vide ou mettre un message d'attente -->
+                      En attente
+                    {% endif %}
+                  </span>
+                  <p class="mb-0">
+                    {% if mission.status == 'REFUSED' %}Refusé par le Directeur{% elif mission.status == 'VALIDATED' %}Validé par le Directeur{% elif mission.status == 'CLOSED' %}Clôturé{% elif mission.status == 'NEW' %}En attente de validation par le DG{% else %}Statut inconnu{% endif %}
+                  </p>
+                </div>
+                {% if mission.status == 'REFUSED' %}
+                <div class="mt-2 p-2">
+                  <span class="badge bg-danger">Motif du refus :</span>
+                  <p class="mt-1 mb-0">{{ mission.refusal_reason }}</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="timeline-line"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer d-flex justify-content-between">
+        <div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        </div>
+        <div>
+          <!-- telecharger pdf -->
+          <a href="{% url 'download_pdf' mission.id %}" class="btn btn-outline-danger me-2 mb-2">
+            <i class="fas fa-file-pdf mr-1"></i> PDF
+          </a> 
+          <!--excel -->
+          <a href="{% url 'export_mission_excel' mission.id %}" class="btn btn-outline-primary me-2 mb-2">
+            <i class="fas fa-file-excel mr-1"></i> Excel
+          </a> 
+          <!--word -->
+          <a href="{% url 'export_mission_docx' mission.id %}" class="btn btn-outline-info me-2 mb-2">
+            <i class="fas fa-file-word mr-1"></i> Word
+          </a>
+          <!--csv -->
+          <a href="{% url 'export_mission_csv' mission.id %}" class="btn btn-outline-success me-2 mb-2">
+            <i class="fas fa-file-csv mr-1"></i> CSV
+          </a>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
+<style>
+/* Style pour la timeline */
+.timeline-container {
+  position: relative;
+  margin-left: 15px;
+  padding-left: 30px;
+}
+
+.timeline-step {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: -30px;
+  top: 25px;
+  bottom: 0;
+  width: 2px;
+  background-color: #e9ecef;
+}
+
+.timeline-content {
+  display: flex;
+  align-items: flex-start;
+}
+
+.timeline-icon {
+  position: absolute;
+  left: -46px;
+  z-index: 2;
+}
+
+.circle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #0D6EFD;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.timeline-text {
+  flex: 1;
+}
+
+/* Ajouter une bordure à gauche pour les messages de refus */
+.timeline-text .mt-2.p-2 {
+  border-left: 4px solid #dc3545;
+  padding-left: 10px;
+  background-color: #f8d7da;
+  border-radius: 4px;
+}
+</style>

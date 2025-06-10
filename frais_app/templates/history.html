@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% block title %}Historique des demandes{% endblock %}
+{% block content %}
+<!-- Navigation Tabs -->
+<!-- En-tête de la page avec les compteurs -->
+{% include 'account.html' %}
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'missions' %}active{% endif %}" href="{% url 'missions' %}">
+            <i class="fas fa-home me-1"></i> Accueil
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'history' %}">
+            <i class="fas fa-history me-1"></i> Historique
+        </a>
+    </li>
+</ul>
+
+<!-- historique des demandes validées -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Historique des demandes validées</h5>
+
+        <div class="d-flex">
+          <form method="GET" action="{% url 'history' %}" class="d-flex me-2">
+              <!-- triage du nombre de mission à afficher -->
+              <select class="form-select form-select-sm me-3" style="width: auto; min-width: 80px;" name="per_page" onchange="this.form.submit()">
+                  <option value="10" {% if request.GET.per_page == '10' or not request.GET.per_page %}selected{% endif %}>10</option>
+                  <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
+                  <option value="30" {% if request.GET.per_page == '30' %}selected{% endif %}>30</option>
+              </select>
+      
+              <div class="input-group">
+                  <input type="text" class="form-control" name="search" placeholder="Rechercher..." 
+                         value="{{ request.GET.search|default:'' }}" aria-label="Search">
+                  <button class="btn btn-outline-secondary" type="submit">
+                      <i class="fas fa-search"></i>
+                  </button>
+              </div>
+          </form>
+      </div>
+    </div>
+
+    <div class="card-body fade-in">
+        <div class="table-container">
+            <!-- Ajout de la classe mission-table -->
+            <table class="table table-hover mission-table">
+                <thead>
+                    <tr>
+                        <th>ID </th>
+                        <th>Lieu</th>
+                        <th>Technicien</th>
+                        <th>Dates</th>
+                        <th>Total payé</th>
+                        <th>Facturation</th>
+                        <th>Statut final</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for mission in missions %}
+                    <tr>
+                        <td>{{ mission.id }}</td>
+                        <td>{{ mission.location }}</td>
+                        <!--nom des techniciens et prenom-->
+                        <td>
+                          {% for technicien in mission.techniciens.all %}
+                            <span class="technicien-name" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                  title="{{ technicien.first_name }} {{ technicien.last_name }}">
+                              {{ technicien.first_name }} {{ technicien.last_name }}
+                            </span><br>
+                          {% empty %}
+                            Aucun technicien
+                          {% endfor %}
+                        </td>
+                        <!--date de la mission-->
+                        <td>
+                            {{ mission.start_date|date:"d/m/Y" }} - {{ mission.end_date|date:"d/m/Y" }}
+                        </td>
+                        <!-- depense de la mission -->
+                        <td>
+                        {% for expense in mission.depenses.all %}
+                            {{ expense.total_expenses }} Ar
+                        {% endfor %}
+                        </td>
+                        <!--Facturation-->
+                        {% if mission.facturation %}
+                            <td><span class="badge badge-billed">Facturé</span></td>
+                        {% else %}
+                            <td><span class="badge badge-not-billed">Non facturé</span></td>
+                        {% endif %}
+                        <td>
+                        {% if mission.status == 'CLOSED' %}
+                          <span class="badge badge-closed">Clôturée</span>
+                        {% else %}
+                          <span class="badge badge-closed">En attente de clôture</span>
+                        {% endif %}
+                      </td>
+                        
+
+                        <!-- icon de détails -->
+                        <td class="action-icons">
+                          <i class="fas fa-info-circle details"
+                             data-bs-toggle="modal"
+                             data-bs-target="#detailModal{{ mission.id }}"
+                             title="Détails">
+                          </i>
+                          {% if user.is_authenticated and perms.frais_app.can_upload_file %}
+                          <!-- icon pour l'ajout de fichier -->
+                          <i class="fas fa-file-upload"
+                              data-bs-toggle="modal"
+                              data-bs-target="#uploadFileModal{{ mission.id }}"
+                              title="Envoyer rapport d'intervention">
+                          </i>
+                          {% endif %}
+                          <!--icon de cloturation de mission-->
+                          {% if user.is_authenticated and perms.frais_app.can_close_mission %}
+                            <i class="fas fa-clipboard-check text-success"
+                              data-bs-toggle="modal"
+                              data-bs-target="#closeMissionModal{{ mission.id }}"
+                              title="Clôturer la mission">
+                            </i>
+                            {% endif %}
+                          
+                        </td>
+                  
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container">
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          {% if missions.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ missions.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% endif %}
+          
+          {% for num in missions.paginator.page_range %}
+            {% if missions.number == num %}
+              <li class="page-item active">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% elif num > missions.number|add:'-3' and num < missions.number|add:'3' %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if missions.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ missions.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    </div>
+</div>
+
+<!-- Place modals outside of the table but still inside the loop -->
+{% for mission in missions %}
+    <!-- Modal pour afficher les détails de la mission -->
+    {% include 'detail_modal.html' with mission=mission %}
+    <!-- Modal pour envoyer un fichier -->
+    {% include 'uploadFileModal.html' with mission=mission %}
+    <!-- Modal pour clôturer la mission -->
+    {% include 'cloturation_modal.html' with mission=mission %}
+
+   
+    
+{% endfor %}
+
+<!-- Ajout du bloc de notification pour history.html -->
+<div class="notifications-container">
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'cloture' in message.extra_tags or 'fichier' in message.extra_tags %}
+                <div class="notification-popup {% if message.tags %}{{ message.tags }}{% endif %}">
+                    <div class="notification-content">
+                        <div class="notification-icon-message">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle notification-icon success-icon"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle notification-icon error-icon"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle notification-icon warning-icon"></i>
+                            {% elif message.tags == 'info' %}
+                                <i class="fas fa-info-circle notification-icon info-icon"></i>
+                            {% else %}
+                                <i class="fas fa-bell notification-icon"></i>
+                            {% endif %}
+                            <span class="notification-message">{{ message }}</span>
+                        </div>
+                        <button class="close-notification">&times;</button>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Style CSS pour les notifications -->
+<style>
+    .notifications-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    .notification-popup {
+        background-color: white;
+        border-left: 4px solid #28a745;  /* Couleur verte pour succès */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 4px;
+        min-width: 300px;
+        animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-out 5s forwards;
+        position: relative;
+    }
+    
+    .notification-popup.success {
+        border-left-color: #28a745;  /* Vert pour succès */
+    }
+    
+    .notification-popup.error {
+        border-left-color: #dc3545;  /* Rouge pour erreur */
+    }
+    
+    .notification-popup.warning {
+        border-left-color: #ffc107;  /* Jaune pour avertissement */
+    }
+    
+    .notification-popup.info {
+        border-left-color: #17a2b8;  /* Bleu pour info */
+    }
+    
+    .notification-icon-message {
+        display: flex;
+        align-items: center;
+    }
+    
+    .notification-icon {
+        margin-right: 12px;
+        font-size: 18px;
+    }
+    
+    .success-icon {
+        color: #28a745;
+    }
+    
+    .error-icon {
+        color: #dc3545;
+    }
+    
+    .warning-icon {
+        color: #ffc107;
+    }
+    
+    .info-icon {
+        color: #17a2b8;
+    }
+    
+    .notification-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .close-notification {
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+            visibility: hidden;
+        }
+    }
+</style>
+
+<!-- Script JavaScript pour les notifications -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fermer les notifications quand on clique sur le bouton X
+        document.querySelectorAll('.close-notification').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const notification = this.closest('.notification-popup');
+                notification.style.opacity = '0';
+                setTimeout(function() {
+                    notification.remove();
+                }, 300);
+            });
+        });
+        
+        // Supprimer automatiquement les notifications après 5 secondes
+        setTimeout(function() {
+            document.querySelectorAll('.notification-popup').forEach(function(notification) {
+                notification.remove();
+            });
+        }, 5500);
+    });
+</script>
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation des tooltips Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+{% endblock %}
+{% endblock %}

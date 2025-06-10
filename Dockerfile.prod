@@ -1,0 +1,45 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install WeasyPrint and PostgreSQL dependencies
+RUN echo "deb http://mirror.malagasy.com/debian stable main" > /etc/apt/sources.list && \
+    echo "deb http://security.debian.org/debian-security stable-security main" >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libcairo2 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libgdk-pixbuf2.0-0 \
+        libffi-dev \
+        libgirepository1.0-dev \
+        libglib2.0-0 \
+        libglib2.0-dev \
+        libpq-dev \
+        shared-mime-info \
+        netcat-openbsd && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+# Set workdir
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Entrypoint (optional script for waiting DB, etc.)
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Copy the rest of the application code
+COPY . .
+
+# Entrypoint handles migrations, collectstatic, etc.
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Start the Django server with Gunicorn
+CMD ["gunicorn", "frais_de_mission.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "6"]
+

@@ -1,7 +1,0 @@
-include LICENSE
-include README.md
-recursive-include frais_mission/ *
-recursive-include fdm_app/ *
-recursive-include fdm_app/static *
-recursive-include fdm_app/migrations *
-recursive-include fdm_app/templates *

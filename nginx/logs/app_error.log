@@ -1,0 +1,2 @@
+2025/06/05 11:02:17 [error] 21#21: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 172.19.0.1, server: mission.malagasy.mg, request: "GET / HTTP/1.1", upstream: "http://172.19.0.3:8000/", host: "mission.malagasy.mg"
+2025/06/05 11:02:18 [error] 21#21: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 172.19.0.1, server: mission.malagasy.mg, request: "GET /favicon.ico HTTP/1.1", upstream: "http://172.19.0.3:8000/favicon.ico", host: "mission.malagasy.mg", referrer: "http://mission.malagasy.mg/"

@@ -1,0 +1,24 @@
+<!-- Modal pour clôturer la mission -->
+<div class="modal fade" id="closeMissionModal{{ mission.id }}" tabindex="-1" aria-labelledby="closeMissionModalLabel{{ mission.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="closeMissionModalLabel{{ mission.id }}">Confirmation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir clôturer cette mission ?</p>
+        <p class="text-muted small">Cette action finalisera la mission et la marquera comme terminée.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <!-- Changez l'action pour pointer vers la vue history avec une méthode POST -->
+        <form action="{% url 'history' %}" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="mission_id" value="{{ mission.id }}">
+          <button type="submit" class="btn btn-success">Confirmer la clôture</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de Mission</title>
+    <style>
+        @page {
+            margin: 2.5cm 1.5cm;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        .header img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .mission-info {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: #2c3e50;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-new {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .status-validated {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .status-refused {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        h2 {
+            color: #3498db;
+            font-size: 18px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e7e7e7;
+            margin-top: 30px;
+        }
+        
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .expenses-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .expenses-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e7e7e7;
+        }
+        
+        .expenses-table tr:nth-child(even) {
+            background-color: #f5f7fa;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: #ecf0f1 !important;
+        }
+        
+        .total-amount {
+            text-align: right;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #7f8c8d;
+            padding-top: 10px;
+            border-top: 1px solid #e7e7e7;
+        }
+        
+        .details-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        @media print {
+            body {
+                font-size: 12px;
+            }
+            
+            .mission-info, .expenses-table, .total-amount {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <!-- Vous pouvez ajouter un logo ici -->
+        <!-- <img src="path_to_logo.png" alt="Logo"> -->
+        <h1>RAPPORT DE MISSION #{{ mission.id }}</h1>
+        <div class="subtitle">Généré le {% now "d F Y à H:i" %}</div>
+    </div>
+    
+    <div class="mission-info">
+        <div class="info-row">
+            <span class="info-label">Lieu :</span>
+            <span class="info-value">{{ mission.location }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Période :</span>
+            <span class="info-value">Du {{ mission.start_date|date:"d F Y" }} au {{ mission.end_date|date:"d F Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Techniciens :</span>
+            <span class="info-value">
+                {% for technicien in mission.techniciens.all %}
+                    {{ technicien.first_name }} {{ technicien.last_name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Aucun technicien
+                {% endfor %}
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Statut :</span>
+            <span class="info-value">
+                {% if mission.status == 'NEW' %}
+                    <span class="status status-new">Nouvelle</span>
+                {% elif mission.status == 'VALIDATED' %}
+                    <span class="status status-validated">Validée</span>
+                {% elif mission.status == 'REFUSED' %}
+                    <span class="status status-refused">Refusée</span>
+                {% else %}
+                    {{ mission.status }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    
+    <h2>Détails de la mission</h2>
+    <div class="details-box">
+        {{ mission.mission_details|linebreaks }}
+    </div>
+    
+    <h2>Résumé des dépenses</h2>
+    <table class="expenses-table">
+        <thead>
+            <tr>
+                <th style="width: 40%">Catégorie</th>
+                <th style="width: 30%">Détails</th>
+                <th style="width: 30%">Montant (Ar)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+                <tr>
+                    <td>Hébergement</td>
+                    <td>{{ expense.hosting_days }} nuit(s) à {{ expense.overnight_rate }} Ar</td>
+                    <td>{{ expense.total_hosting|floatformat:2 }} Ar</td>
+                </tr>
+                <tr>
+                    <td>Repas</td>
+                    <td>{{ expense.meal_costs }} Ar / jour</td>
+                    <td>{{ expense.total_meal_costs|floatformat:2 }} Ar</td>
+                </tr>
+                <tr>
+                    <td>Transport</td>
+                    <td>{{ expense.transport }}</td>
+                    <td>{{ expense.shipping_costs|floatformat:2 }} Ar</td>
+                </tr>
+                {% if expense.various_expenses_price > 0 %}
+                <tr>
+                    <td>Frais divers</td>
+                    <td>{{ expense.various_expenses_details|default:"N/A" }}</td>
+                    <td>{{ expense.various_expenses_price|floatformat:2 }} Ar</td>
+                </tr>
+                {% endif %}
+                <tr class="total-row">
+                    <td colspan="2"><strong>TOTAL</strong></td>
+                    <td><strong>{{ expense.total_expenses|floatformat:2 }} Ar</strong></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center;">Aucune dépense enregistrée</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if expenses %}
+    <div class="total-amount">
+        Total à payer : {{ mission.depenses.first.total_expenses|floatformat:2 }} Ar
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>Ce document est généré automatiquement. Pour toute question, veuillez contacter le service administratif.</p>
+    </div>
+</body>
+</html>

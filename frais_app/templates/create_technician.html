@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ajouter un technicien | Frais de Mission{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">Ajouter un technicien</h1>
+            <p class="text-muted">Ajoutez un nouveau technicien individuellement ou par lot</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Ajouter manuellement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'create_technician' %}">
+                        {% csrf_token %}
+                        
+                        {% if form_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in form_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if single_success %}
+                        <div class="alert alert-success">
+                            Le technicien a été ajouté avec succès.
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="matricule" class="form-label">Matricule</label>
+                            <input type="text" class="form-control" id="matricule" name="matricule">
+                            <small class="text-muted">Facultatif</small>
+                        </div>
+                        <input type="hidden" name="form_type" value="single">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Enregistrer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-import me-2"></i>Importer depuis un fichier</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'create_technician' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if file_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in file_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if file_success %}
+                        <div class="alert alert-success">
+                            {{ file_success }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Fichier Excel (XLSX)</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls, .csv" required>
+                            <small class="text-muted">Le fichier doit contenir les colonnes: Nom, Prénom, Matricule (facultatif)</small>
+                        </div>
+                        <input type="hidden" name="form_type" value="file">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload me-1"></i> Importer
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Format du fichier</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">Le fichier d'importation doit avoir le format suivant:</p>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Matricule</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dupont</td>
+                                <td>Jean</td>
+                                <td>1234</td>
+                            </tr>
+                            <tr>
+                                <td>Martin</td>
+                                <td>Sophie</td>
+                                <td>5678</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <small class="text-muted">Les colonnes doivent être présentées dans cet ordre. La colonne Matricule est facultative.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Désactivation des alertes après 5 secondes
+  setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(function(alert) {
+      const bsAlert = new bootstrap.Alert(alert);
+      bsAlert.close();
+    });
+  }, 5000);
+</script>
+{% endblock %}
