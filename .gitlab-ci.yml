@@ -1,24 +1,16 @@
-image: docker:latest
-
-services:
-  - docker:dind
-
-variables:
-  DOCKER_DRIVER: overlay2
-
-stages:
-  - deploy
-
 deploy:
   stage: deploy
-  tags:
-    - production
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   before_script:
-    # - apk add --no-cache docker-compose git
-    - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
+    - until docker info; do sleep 1; done  # Wait for docker to be ready
   script:
     - echo "🚀 Déploiement en cours..."
     - docker compose -f docker-compose.prod.yml down
-    - docker compose -f docker-compose.prod.yml up -d --build
-  only:
-    - develop
+    - docker compose -f docker-compose.prod.yml up -d
