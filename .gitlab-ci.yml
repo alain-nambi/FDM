@@ -28,15 +28,18 @@ deploy:
   tags:
     - production
   before_script:
+    - pwd  # Voir le répertoire courant
+    - ls -la  # Voir les fichiers présents
     - git config --global --add safe.directory /builds/$CI_PROJECT_PATH
-    - until docker info; do 
-        echo "Waiting for Docker daemon..."; 
-        sleep 3; 
+    - until docker info; do
+        echo "Waiting for Docker daemon...";
+        sleep 3;
       done
     - echo "Docker is ready!"
-    - docker compose version  # Verify compose is available
+    - docker compose version
   script:
     - echo "🚀 Déploiement en cours..."
+    - ls -la docker-compose.prod.yml  # Vérifier que le fichier existe
     - docker compose -f docker-compose.prod.yml down || true
     - docker compose -f docker-compose.prod.yml up -d --build
   only:
